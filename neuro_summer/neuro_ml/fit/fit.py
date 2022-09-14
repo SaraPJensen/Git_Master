@@ -51,10 +51,13 @@ def fit(
     log.debug(f"Fitting {model.__class__.__name__} on {device}")
 
     for epoch in range(epochs):
+        print("Epoch: ", epoch)
         train_loss = train(model, train_loader, optimizer, criterion, device)
         val_loss = val(model, val_loader, criterion, device)
         log.info(
             f"{epoch + 1}) train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
         if epoch % 10 == 0:
+            print("Trying to save model")
             model.save(
                 f"{dataset_params.n_neurons}_neurons_{dataset_params.timestep_bin_length}_timesteps_{epoch}.pt")
+            print("Saved the model!!")

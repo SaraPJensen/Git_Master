@@ -1,4 +1,3 @@
-print("Starting to import things")
 from neuro_ml.dataset import SimulationEnum, DatasetParams
 from neuro_ml.models import (
     LSTM,
@@ -19,11 +18,8 @@ from neuro_ml.models import (
 from neuro_ml.fit import fit, test_model
 import torch
 import sys
-import os
 from typing_extensions import dataclass_transform
 from IPython.core import ultratb
-
-print("Finished importing things")
 
 sys.excepthook = ultratb.FormattedTB(
     mode="Context", color_scheme="Linux", call_pdb=False

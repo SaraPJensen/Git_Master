@@ -4,6 +4,7 @@ from torch_geometric.nn import MessagePassing
 import torch.nn.functional as F
 from dataclasses import dataclass
 from neuro_ml.dataset import TimeSeriesAndEdgeIndicesToWeightsDataset
+import os 
 
 @dataclass
 class EdgeRegressorParams:
@@ -65,4 +66,12 @@ class EdgeRegressor(MessagePassing):
         return result
 
     def save(self, filename):
+        print("Trying to save in edge regressor, filename: ", filename)
+        savepath = f"models/{self.NAME}"
+        if not os.path.exists(savepath):  ##This is where it craches, test further tomorrow
+            print("Current position: ", os.getcwd())
+            os.makedirs(savepath)
+            print("Made directory")
+
         torch.save(self.state_dict(), f"models/{self.NAME}/{filename}")
+        print("Saved model in edge regressor") 
