@@ -129,7 +129,6 @@ def fit_edge_classifier(dataset_params):
 
 
 if __name__ == "__main__":
-    print("Starting")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataset_params = DatasetParams(
         n_neurons=20,
