@@ -1,4 +1,3 @@
-print("Starting to import things")
 from neuro_ml.dataset import SimulationEnum, DatasetParams
 from neuro_ml.models import (
     LSTM,
@@ -19,11 +18,8 @@ from neuro_ml.models import (
 from neuro_ml.fit import fit, test_model
 import torch
 import sys
-import os
 from typing_extensions import dataclass_transform
 from IPython.core import ultratb
-
-print("Finished importing things")
 
 sys.excepthook = ultratb.FormattedTB(
     mode="Context", color_scheme="Linux", call_pdb=False
@@ -105,8 +101,10 @@ def fit_simple(dataset_params):
 
 
 def fit_edge_regressor(dataset_params):
-    edge_regressor_params = EdgeRegressorParams(n_shifts=10)
+    # Set the number of time steps we want to calculate co-firing rates for and the number of neurons
+    edge_regressor_params = EdgeRegressorParams(n_shifts=10, n_neurons=dataset_params.n_neurons)
 
+    # Fit the model
     fit(
         EdgeRegressor,
         model_is_classifier=False,
@@ -130,10 +128,12 @@ def fit_edge_classifier(dataset_params):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Set the simulation, window size, and number of files to use
     dataset_params = DatasetParams(
         n_neurons=20,
-        n_timesteps=100000,
-        timestep_bin_length=100000,
+        n_timesteps=1_000,
+        timestep_bin_length=500,
         number_of_files=100,
         simulation_enum=SimulationEnum.mikkel,
     )

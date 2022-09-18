@@ -8,6 +8,7 @@ def val(model, data_loader, criterion, device):
     model.eval()
     avg_loss = 0
     with torch.no_grad():
+        # For each batch in the data loader calculate the validation loss
         for batch_idx, batch in enumerate(
             (t := tqdm(data_loader, leave=False, colour="#FF5666"))
         ):

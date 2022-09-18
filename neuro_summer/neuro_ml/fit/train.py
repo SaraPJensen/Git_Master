@@ -12,10 +12,11 @@ def train(model, data_loader, optimizer, criterion, device):
     model.train()
     avg_loss = 0
 
+    # For each batch in the data loader calculate the loss and update the model
     for batch_idx, batch in enumerate(
         (t := tqdm(data_loader, leave=False, colour="#7FEFBD"))
     ):
-        x, other_inputs, y = batch_to_device(batch, device)
+        x, other_inputs, y = batch_to_device(batch, device) # other inputs holds the edge index
 
         optimizer.zero_grad()
 

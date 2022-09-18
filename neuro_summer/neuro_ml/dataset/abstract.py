@@ -38,6 +38,9 @@ class AbstractDataset(Dataset):
         dataset_params,
         model_is_classifier,
     ):
+        """
+        Load the dataset
+        """
         self.X = []
         self.y = []
 
@@ -48,6 +51,7 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#52D1DC",
         ):
+            # Convert sparse X to dense
             raw_data = np.load(filename, allow_pickle=True)
 
             raw_x = torch.tensor(raw_data["X_sparse"]).T
@@ -56,12 +60,14 @@ class AbstractDataset(Dataset):
 
             X = sparse_x.to_dense()
 
+            # If model is a classifier, one-hot encode the weight matrix
             y = (
                 self.one_hot(torch.tensor(raw_data["W_0"]))
                 if model_is_classifier
                 else torch.tensor(raw_data["W_0"])
             )
 
+            # Cut X into windows of length timestep_bin_length and append
             for i in range(
                 math.floor(
                     dataset_params.n_timesteps / dataset_params.timestep_bin_length
@@ -78,6 +84,9 @@ class AbstractDataset(Dataset):
                     self.y.append(y.float())
 
     def _create_edge_indices(self, n_neurons):
+        """
+        For each simulation in the dataset create an edge index based on the non-zero elements of W_0
+        """
         self.edge_index = []
 
         for y in tqdm(
@@ -92,6 +101,9 @@ class AbstractDataset(Dataset):
             self.edge_index.append(edge_index.T)
 
     def _create_fully_connected_edge_index(self, n_neurons):
+        """
+        For each simulation in the dataset create a fully connected edge index
+        """
         self.edge_index = []
         for y in tqdm(
             self.y,
@@ -103,6 +115,9 @@ class AbstractDataset(Dataset):
             self.edge_index.append(edge_index.nonzero().T)
 
     def create_geometric_data(self):
+        """
+        Create a list of torch_geometric.data.Data objects from the dataset
+        """
         data = []
         for i in range(len(self)):
             inputs, y = self[i].values()
@@ -111,10 +126,16 @@ class AbstractDataset(Dataset):
         return data
 
     def to_binary(self, y):
+        """
+        Create a binary representation of the weight matrix
+        """
         zeros = torch.zeros(len(y))
         ones = torch.ones(len(y))
         y = torch.where(y == 0, zeros, ones)
         return y
 
     def one_hot(self, y):
+        """
+        Create a one-hot representation of the weight matrix
+        """
         return F.one_hot((y.sign() + 1).to(torch.int64))

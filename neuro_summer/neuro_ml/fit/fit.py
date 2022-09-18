@@ -7,25 +7,6 @@ from neuro_ml.fit.val import val
 from neuro_ml.fit.train import train
 from neuro_ml.dataset import create_train_val_dataloaders, create_test_dataloader
 
-
-def find_mean_variance(data_loader):
-    mean = 0
-    variance = 0
-    for batch in data_loader:
-        y = batch[-1]
-        mean += y.mean().sum()
-
-    mean /= len(data_loader)
-
-    for batch in data_loader:
-        y = batch[-1]
-        variance += ((y - mean).pow(2)).sum() / len(y)
-
-    variance /= len(data_loader)
-
-    return mean, variance
-
-
 def fit(
     model,
     model_is_classifier,
@@ -35,12 +16,15 @@ def fit(
     epochs=config.EPOCHS,
     learing_rate=config.LEARNING_RATE,
 ):
+    # Prepare data loaders for training and validation
     train_loader, val_loader = create_train_val_dataloaders(
         model.DATASET, model_is_classifier, dataset_params
     )
 
+    # Initialize model
     model = model(model_params).to(device)
 
+    # Set optimizer and criterion
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learing_rate)
     criterion = (
         torch.nn.CrossEntropyLoss()
@@ -50,6 +34,7 @@ def fit(
 
     log.debug(f"Fitting {model.__class__.__name__} on {device}")
 
+    # For each epoch calculate training and validation loss
     for epoch in range(epochs):
         train_loss = train(model, train_loader, optimizer, criterion, device)
         val_loss = val(model, val_loader, criterion, device)
