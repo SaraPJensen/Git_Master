@@ -133,7 +133,7 @@ if __name__ == "__main__":
     dataset_params = DatasetParams(
         n_neurons=20,
         n_timesteps=100000,
-        timestep_bin_length=500,
+        timestep_bin_length=100000,
         number_of_files=100,
         simulation_enum=SimulationEnum.mikkel,
     )
