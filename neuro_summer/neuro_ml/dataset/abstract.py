@@ -105,7 +105,9 @@ class AbstractDataset(Dataset):
         """
         For each simulation in the dataset create a fully connected edge index
         """
-        self.edge_index = []   #this is of length 70 (no. of training samples), each element is a 2xN tensor, where N is the number of edges in the graph, one layer for each direction
+        #this is of length 70 (no. of training samples), each element is a 2xN tensor, where N is the number of edges in the graph, one layer for each direction
+        #So all nodes are bidirectionally connected to all nodes 
+        self.edge_index = []   
         for y in tqdm(
             self.y,
             desc="Creating edge indices",

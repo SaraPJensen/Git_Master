@@ -43,31 +43,30 @@ class EdgeRegressor(MessagePassing):
         ) # Second MLP
 
     def forward(self, x, edge_index):
-        # x has shape [N, in_channels]
-        # edge_index has shape [2, E]
-
-        return self.propagate(edge_index, x=x)   #This calls message and update, so output from message is input to update
+        # x has shape [N, n_shitfs]
+        # edge_index has shape [2, E], one layer for each direction
+        return self.propagate(edge_index, x=x)   #This calls message and update, shape of answer is [n_neurons, n_neurons]
         
     def message(self, x_i, x_j):
-        # x_i has shape [E, in_channels]
-        # x_j has shape [E, in_channels]
+        # x_i has shape [E, in_channels], E is the number of edges, n_neurons*n_neurons
+        # x_j has shape [E, in_channels], in_channels is the number of timesteps
         batch_size = int(x_i.shape[0] / self.n_neurons**2)
 
         # Calculate the influence of i on j forward in time
-        inner_products = [torch.sum(x_i*self.shift(x_j, -(t+1)), dim=1).unsqueeze(dim=1) for t in range(self.n_shifts)]
+        inner_products = [torch.sum(x_i*self.shift(x_j, -(t+1)), dim=1).unsqueeze(dim=1) for t in range(self.n_shifts)]  
+        #List of length 10, since 10 shifts considered, each element is a tensor of shape [n_neurons*n_neurons, 1], i.e. [E, 1], giving the influence at that timestep
 
         # Concatenate the inner products to get vectors of length M
         tmp = torch.cat(inner_products, dim=1)
+        tmp = tmp / (x_i.shape[1]/100) # Normalize the inner products to get co-firings per 100 time steps, shape: 400, 10
 
-
-        tmp = tmp / (x_i.shape[1]/100) # Normalize the inner products to get co-firings per 100 time steps
-
-        batch_selection_matrix = self.selection_matrix.repeat(batch_size, 1) # Repeat the selection matrix for the entire batch
+        batch_selection_matrix = self.selection_matrix.repeat(batch_size, 1) # Repeat the selection matrix for the entire batch, shape: 400, 20
+        #Output of MLP_1, shape: 400, 1
 
         return self.mlp1(tmp)*batch_selection_matrix # Apply the first MLP to the entire batch
 
-    def update(self, inputs):
-        return self.mlp2(inputs) # Apply the second MLP
+    def update(self, inputs):  #Shape of input is [n_neurons, n_neurons]
+        return self.mlp2(inputs) # Apply the second MLP, output shape: [n_neurons, n_neurons]
 
     def shift(self, x, n):
         # Shifts the time series x by n time steps to the left

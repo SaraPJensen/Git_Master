@@ -26,8 +26,6 @@ def train(model, data_loader, optimizer, criterion, device):
         #writer.add_graph(model, x)
         #exit()
 
-        print(other_inputs[0])
-
         y_hat = model(x, other_inputs)
         loss = criterion(y_hat, y)
         loss.backward()
