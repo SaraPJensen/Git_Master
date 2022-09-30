@@ -6,7 +6,8 @@ from neuro_ml.fit.batch_to_device import batch_to_device
 from zenlog import log
 
 
-def test_model(model, epoch, dataset_params, model_params, model_is_classifier, device):
+#This is never used 
+def test_model(model, epoch, dataset_params, model_params, model_is_classifier, device):  
     test_loader = create_test_dataloader(
         model.DATASET,
         dataset_params,

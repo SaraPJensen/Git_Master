@@ -5,6 +5,7 @@ from neuro_ml.dataset.abstract import AbstractDataset
 from zenlog import log
 import torch
 
+#Used in simple model
 
 class TwoShiftedNeuronsToWeightsDataset(AbstractDataset):
     IS_GEOMETRIC = False

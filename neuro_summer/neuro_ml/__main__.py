@@ -100,6 +100,18 @@ def fit_simple(dataset_params):
     )
 
 
+def fit_edge_classifier(dataset_params):
+    edge_classifer_params = EdgeClassifierParams(n_shifts=20, n_classes=3)
+
+    fit(
+        EdgeClassifier,
+        model_is_classifier=True,
+        model_params=edge_classifer_params,
+        dataset_params=dataset_params,
+        device=device,
+    )
+
+
 def fit_edge_regressor(dataset_params):
     # Set the number of time steps we want to calculate co-firing rates for and the number of neurons
     edge_regressor_params = EdgeRegressorParams(n_shifts=10, n_neurons=dataset_params.n_neurons)
@@ -114,17 +126,6 @@ def fit_edge_regressor(dataset_params):
     )
 
 
-def fit_edge_classifier(dataset_params):
-    edge_classifer_params = EdgeClassifierParams(n_shifts=20, n_classes=3)
-
-    fit(
-        EdgeClassifier,
-        model_is_classifier=True,
-        model_params=edge_classifer_params,
-        dataset_params=dataset_params,
-        device=device,
-    )
-
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -132,8 +133,8 @@ if __name__ == "__main__":
     # Set the simulation, window size, and number of files to use
     dataset_params = DatasetParams(
         n_neurons=20,
-        n_timesteps=1_000,
-        timestep_bin_length=500,
+        n_timesteps=100000,
+        timestep_bin_length=100000,
         number_of_files=100,
         simulation_enum=SimulationEnum.mikkel,
     )

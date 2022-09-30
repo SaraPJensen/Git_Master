@@ -16,7 +16,7 @@ class EdgeRegressor(MessagePassing):
     x_i' = MLP_2(||_{j \in \mathcal{N}(i) MLP_1(1/N ||_{t=1}^M x_i * P^t x_j))
     """
 
-    DATASET = TimeSeriesAndEdgeIndicesToWeightsDataset
+    DATASET = TimeSeriesAndEdgeIndicesToWeightsDataset    #Variables defined outside the init belong to all instances of the class, and cannot be changed
     NAME = "edge_regressor"
 
     def __init__(self, params):
@@ -24,8 +24,9 @@ class EdgeRegressor(MessagePassing):
         self.n_shifts = params.n_shifts # M, number of time steps for which we consider the influence of i  on j forward in time
         self.n_neurons = params.n_neurons # N, number of neurons in the network
         self.selection_matrix = (torch.eye(self.n_neurons)
-                .repeat_interleave(self.n_neurons, dim=0)
-            ) # Matrix that selects the j-th neuron in the MLP_1 output
+                .repeat_interleave(self.n_neurons, dim=0)) # Matrix that selects the j-th neuron in the MLP_1 output
+                #repeat_interleave repeats each element n_neurons times
+
         self.mlp1 = Seq(
             Linear(params.n_shifts, params.n_neurons),
             ReLU(),
@@ -45,8 +46,8 @@ class EdgeRegressor(MessagePassing):
         # x has shape [N, in_channels]
         # edge_index has shape [2, E]
 
-        return self.propagate(edge_index, x=x)
-
+        return self.propagate(edge_index, x=x)   #This calls message and update, so output from message is input to update
+        
     def message(self, x_i, x_j):
         # x_i has shape [E, in_channels]
         # x_j has shape [E, in_channels]

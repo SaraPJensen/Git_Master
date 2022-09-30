@@ -3,6 +3,8 @@ from tqdm import tqdm
 from neuro_ml.dataset.abstract import AbstractDataset
 from torch_geometric.utils import train_test_split_edges
 
+#Used for classifier_gcn
+
 class LinkClassificationWithGraphsDataset(AbstractDataset):
     IS_GEOMETRIC = True
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from neuro_ml.dataset.abstract import AbstractDataset
 from zenlog import log
 
+#used for lstm and simple_transformer
 
 class TimeSeriesToWeightsDataset(AbstractDataset):
     IS_GEOMETRIC = False
