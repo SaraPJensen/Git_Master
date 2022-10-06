@@ -54,18 +54,40 @@ class AbstractDataset(Dataset):
             # Convert sparse X to dense
             raw_data = np.load(filename, allow_pickle=True)
 
-            raw_x = torch.tensor(raw_data["X_sparse"]).T   #raw_x must be the indices, i.e. the coordinates of the non-zero values in the matrix
+            if "X_sparse" in raw_data.keys():
+                raw_x = raw_data["X_sparse"]
+            else: raw_x = raw_data["spikes"].item()
+
+            #print("dtype of raw_x : ", type(raw_x))
+            #print("Shape of raw_x: ", raw_x.shape)
+            #print(raw_x)
+
+            #raw_x = raw_x.item()
+
+
+            if "W_0" in raw_data.keys():
+                w0 = raw_data["W_0"]
+            else: w0 = raw_data["W"]  #This works fine
+
+            #test = torch.tensor(w0)
+
+            #print("dtype of W_0 : ", type(w0))
+            #print(type(raw_x))
+            #exit()
+            raw_x = torch.tensor(raw_x.to_dense()).T   #raw_x must be the indices, i.e. the coordinates of the non-zero values in the matrix
             sparse_x = torch.sparse_coo_tensor(raw_x, torch.ones(raw_x.shape[1]),  #Input: indices, values, size
                 size=(dataset_params.n_neurons, dataset_params.n_timesteps))
+
+            exit()
 
             X = sparse_x.to_dense()   #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
 
             # If model is a classifier, one-hot encode the weight matrix (the connectivity matrix, the ground truth), shape [n_neurons, n_neurons]
             #First 10 rows are excitatory neurons, bottom 10 are inhibitory
             y = (
-                self.one_hot(torch.tensor(raw_data["W_0"]))
+                self.one_hot(torch.tensor(w0))
                 if model_is_classifier
-                else torch.tensor(raw_data["W_0"])
+                else torch.tensor(w0)
             )
 
             # Cut X into windows of length timestep_bin_length and append
@@ -121,11 +143,10 @@ class AbstractDataset(Dataset):
         # print("edge index slice shape: ", self.edge_index[0].shape)
         # print("Edge index slice: ", self.edge_index[0])
 
-    def create_geometric_data(self):   #Never in use
+    def create_geometric_data(self):   #Somehow in use...
         """
         Create a list of torch_geometric.data.Data objects from the dataset
         """
-        print("Creates geometric data")
         data = []
         for i in range(len(self)):
             inputs, y = self[i].values()

@@ -20,8 +20,14 @@ def load_data(file):
 
     data = np.load(file, allow_pickle=True)
 
-    X_sparse = data["X_sparse"].T
-    w0 = data["W_0"]
+    if "X_sparse" in data.keys():
+        X_sparse = data["X_sparse"].T
+    else: X_sparse = data["spikes"].T
+
+    if "W_0" in data.keys():
+        w0 = data["W_0"]
+    else: w0 = data["W"]
+    
     sparse_x = torch.sparse_coo_tensor(X_sparse, torch.ones(X_sparse.shape[1]), size = (n_neurons, n_timesteps))
 
     X = sparse_x.to_dense()
