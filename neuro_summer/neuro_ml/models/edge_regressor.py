@@ -19,6 +19,7 @@ class EdgeRegressor(MessagePassing):
     DATASET = TimeSeriesAndEdgeIndicesToWeightsDataset    #Variables defined outside the init belong to all instances of the class, and cannot be changed
     NAME = "edge_regressor"
 
+
     def __init__(self, params):
         super().__init__()
         self.n_shifts = params.n_shifts # M, number of time steps for which we consider the influence of i  on j forward in time
@@ -26,6 +27,8 @@ class EdgeRegressor(MessagePassing):
         self.selection_matrix = (torch.eye(self.n_neurons)
                 .repeat_interleave(self.n_neurons, dim=0)) # Matrix that selects the j-th neuron in the MLP_1 output
                 #repeat_interleave repeats each element n_neurons times
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.mlp1 = Seq(
             Linear(params.n_shifts, params.n_neurons),
@@ -60,7 +63,7 @@ class EdgeRegressor(MessagePassing):
         tmp = torch.cat(inner_products, dim=1)
         tmp = tmp / (x_i.shape[1]/100) # Normalize the inner products to get co-firings per 100 time steps, shape: 400, 10
 
-        batch_selection_matrix = self.selection_matrix.repeat(batch_size, 1) # Repeat the selection matrix for the entire batch, shape: 400, 20
+        batch_selection_matrix = self.selection_matrix.repeat(batch_size, 1).to(self.device) # Repeat the selection matrix for the entire batch, shape: 400, 20
         #Output of MLP_1, shape: 400, 1
 
         return self.mlp1(tmp)*batch_selection_matrix # Apply the first MLP to the entire batch
