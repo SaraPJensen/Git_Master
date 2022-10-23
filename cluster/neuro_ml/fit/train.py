@@ -7,14 +7,10 @@ import numpy as np
 from zenlog import log
 import scipy.signal
 
-#from torch.utils.tensorboard import SummaryWriter
-
 
 def train(model, data_loader, optimizer, criterion, device):
     model.train()
     avg_loss = 0
-
-    #writer = SummaryWriter()
 
     # For each batch in the data loader calculate the loss and update the model
     for batch_idx, batch in enumerate(
@@ -31,11 +27,5 @@ def train(model, data_loader, optimizer, criterion, device):
         avg_loss += loss.item()
 
         t.set_description(f"Train loss: {loss:.4f}/({avg_loss/(batch_idx + 1):.4f})")
-
-    # print("True W0")
-    # print(y)
-    # print()
-    # print("Predicted W0")
-    # print(y_hat)
 
     return avg_loss / len(data_loader)

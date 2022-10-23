@@ -8,6 +8,7 @@ from neuro_ml.fit.train import train
 from neuro_ml.dataset import create_train_val_dataloaders, create_test_dataloader
 
 
+
 def fit(
     model,
     model_is_classifier,
@@ -35,14 +36,23 @@ def fit(
 
     log.debug(f"Fitting {model.__class__.__name__} on {device}")
 
+    loss_name = model.makedirs(dataset_params.network_type, dataset_params.foldername)
+    file = open(f"{loss_name}/loss.csv", "w")
+    file.write("epoch,train_loss,val_loss\n")
+    file.close()
+
     # For each epoch calculate training and validation loss
-    for epoch in range(epochs):
+    for epoch in range(1, epochs+1):
         train_loss = train(model, train_loader, optimizer, criterion, device)
         val_loss = val(model, val_loader, criterion, device)
         log.info(
-            f"{epoch + 1}) train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
-        if epoch % 20 == 0:
-            filename = dataset_params.foldername + f"/epoch_{epoch}.pt"
+            f"{epoch}) train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
+        file = open(f"{loss_name}/loss.csv", "a")
+        file.write(f"{epoch},{train_loss},{val_loss}\n")
+        file.close()
+
+        if (epoch % 20) == 0 or epoch == epochs:
+            filename = dataset_params.foldername + f"/epoch_{epoch}.pt"
             model.save(dataset_params.network_type, dataset_params.foldername, filename)
-                #f"{dataset_params.n_neurons}_neurons_{dataset_params.timestep_bin_length}_timesteps_{epoch}.pt")
+

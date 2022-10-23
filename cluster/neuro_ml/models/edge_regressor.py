@@ -5,11 +5,12 @@ import torch.nn.functional as F
 from dataclasses import dataclass
 from neuro_ml.dataset import TimeSeriesAndEdgeIndicesToWeightsDataset
 import os
+import torch.nn as nn
 
 @dataclass
 class EdgeRegressorParams:
-    n_shifts: int = 10
-    n_neurons: int = 20
+    n_shifts: int #= 10
+    n_neurons: int #= 20
 
 class EdgeRegressor(MessagePassing):
     """
@@ -45,6 +46,16 @@ class EdgeRegressor(MessagePassing):
             ReLU(),
             Linear(10*params.n_neurons, params.n_neurons)
         ) # Second MLP
+
+
+        #Maybe use He initialization instead? 
+        with torch.no_grad():
+            nn.init.kaiming_normal_(self.mlp1[0].weight)
+            nn.init.kaiming_normal_(self.mlp1[2].weight)
+            nn.init.kaiming_normal_(self.mlp1[4].weight)
+
+            nn.init.kaiming_normal_(self.mlp2[0].weight)
+            nn.init.kaiming_normal_(self.mlp2[2].weight)
 
     def forward(self, x, edge_index):
         # x has shape [N, n_shitfs]
@@ -83,15 +94,21 @@ class EdgeRegressor(MessagePassing):
             result = x
         return result
 
-    def save(self, network_type, foldername, filename):
-        # Saves the model to a file
+    def makedirs(self, network_type, foldername):
         if not os.path.isdir(f"saved_models/{self.NAME}"):
-            os.mkdir(f"saved_models/{self.NAME}")
+                os.mkdir(f"saved_models/{self.NAME}")
 
         if not os.path.exists(f"saved_models/{self.NAME}/{network_type}"):
-            os.mkdir(f"saved_models/{self.NAME}/{network_type}") 
+                os.mkdir(f"saved_models/{self.NAME}/{network_type}") 
 
         if not os.path.exists(f"saved_models/{self.NAME}/{foldername}"):
-            os.mkdir(f"saved_models/{self.NAME}/{foldername}") 
-            
+                os.mkdir(f"saved_models/{self.NAME}/{foldername}") 
+
+        return f"saved_models/{self.NAME}/{foldername}"
+
+
+    def save(self, network_type, foldername, filename):
+        # Saves the model to file
         torch.save(self.state_dict(), f"saved_models/{self.NAME}/{filename}")
+
+

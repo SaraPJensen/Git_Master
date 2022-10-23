@@ -121,13 +121,15 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Set the simulation, window size, and number of files to use
-    n_clusters = 1
-    cluster_sizes = [24, 10, 12] #[20]
+    cluster_sizes = [30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
+    n_clusters = len(cluster_sizes)
     n_neurons=sum(cluster_sizes)
     n_timesteps=100000
     timestep_bin_length=100000
-    number_of_files=150
+    number_of_files= 150 
     network_type = "small_world"
+
+    print("Cluster sizes: ", cluster_sizes)
 
     dataset_params = DatasetParams(
         network_type,

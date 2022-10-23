@@ -47,7 +47,7 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
         ):
             x, other_inputs, y = batch_to_device(batch, device)
 
-            y_hat = model(x, other_inputs) #.flatten()
+            y_hat = model(x, other_inputs) 
 
             loss = criterion(y_hat, y)
 
