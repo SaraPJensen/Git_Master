@@ -7,6 +7,7 @@ from zenlog import log
 import seaborn
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 def plot_graph(self) -> None:    #Use this to plot the graph!!! 
@@ -26,6 +27,23 @@ def plot_connectivity(W0):
         plt.show()
 
 
+def plot_pred(W0, W0_pred):
+        """Plots the connectivity filter"""
+        palette = seaborn.color_palette("vlag", as_cmap=True)
+
+        fig, ax =plt.subplots(1,2)
+        fig.set_size_inches(12, 5)
+        ax[0].set_title("True")
+        ax[1].set_title("Predicted") 
+        seaborn.heatmap(W0, cmap = palette, center = 0, ax=ax[0])
+        seaborn.heatmap(W0_pred, cmap = palette, center = 0, ax=ax[1])
+        plt.show()
+
+        # W0_scaled = np.tanh(W0.cpu().numpy())
+        # seaborn.heatmap(W0_scaled, cmap = palette, center = 0, linecolor='black')
+        # plt.show()
+
+
 #This is never used 
 def test_model(model, epoch, dataset_params, model_params, model_is_classifier, device):  
     test_loader = create_test_dataloader(
@@ -35,7 +53,8 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
     )
 
     model = model(model_params)
-    model.load_state_dict(torch.load(f"models/{model.NAME}/{dataset_params.foldername}_{epoch}.pt"))
+    print("You are here: ", os.path.abspath(os.getcwd()))
+    model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.foldername}/epoch_{epoch}.pt", map_location=torch.device(device)))
     model.to(device)
     criterion = torch.nn.MSELoss()
 
@@ -43,18 +62,16 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
     avg_loss = 0
     with torch.no_grad():
         for batch_idx, batch in enumerate(
-            (t := tqdm(test_loader, leave=False, colour="#FF5666"))
-        ):
+            (t := tqdm(test_loader, leave=False, colour="#FF5666"))):
+
             x, other_inputs, y = batch_to_device(batch, device)
 
             y_hat = model(x, other_inputs) 
 
             loss = criterion(y_hat, y)
-
             avg_loss += loss.item()
 
-    plot_connectivity(y)
-    plot_connectivity(y_hat)
+            plot_pred(y, y_hat)
 
     avg_test_loss = avg_loss / len(test_loader)
     log.info(f"Avg test loss: {avg_test_loss}")
