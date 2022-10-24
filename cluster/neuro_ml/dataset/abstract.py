@@ -79,10 +79,6 @@ class AbstractDataset(Dataset):
                 else torch.tensor(W0)
             )
 
-            # print("X shape: ", X.shape)
-            # print("W shape: ", y.shape)
-            # print("W type: ", type(y))
-
             # Cut X into windows of length timestep_bin_length and append
             for i in range(
                 math.floor(

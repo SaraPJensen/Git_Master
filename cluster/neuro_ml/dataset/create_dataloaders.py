@@ -6,6 +6,8 @@ from zenlog import log
 from pathlib import Path
 from neuro_ml import config
 from torch.utils.data import dataloader, random_split
+import numpy as np
+from scipy.sparse import coo_matrix
 
 def create_train_val_dataloaders(
     Dataset,
@@ -22,6 +24,24 @@ def create_train_val_dataloaders(
     all_filenames = [
         dataset_path / f"{seed}.npz" for seed in range(dataset_params.number_of_files)
     ]
+
+    for filename in all_filenames:   #Remove datasets where the network exploded, frequency over 50Hz
+        raw_data = np.load(filename, allow_pickle=True)
+        raw_x = raw_data["X_sparse"].item()
+        coo = coo_matrix(raw_x)
+        values = coo.data
+        indices = np.vstack((coo.row, coo.col))
+        i = torch.LongTensor(indices)
+        v = torch.FloatTensor(values)
+        shape = coo.shape
+        X = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to_dense() #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
+        tot_secs = dataset_params.n_timesteps/1000
+        frequency = torch.sum(X)/tot_secs/sum(dataset_params.cluster_sizes)
+
+        if frequency > 50: 
+            all_filenames.remove(filename)
+    
+    log.info("Datasets remaining after removing exploding datasets: ", len(all_filenames))
 
     # Split into train, val and test using the train_val_test_size from the config
     train_filenames, val_filenames, _ = random_split(

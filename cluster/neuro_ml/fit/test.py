@@ -27,17 +27,19 @@ def plot_connectivity(W0):
         plt.show()
 
 
-def plot_pred(W0, W0_pred):
+def plot_pred(W0, W0_pred, path, epoch, dataset_params):
         """Plots the connectivity filter"""
         palette = seaborn.color_palette("vlag", as_cmap=True)
 
         fig, ax =plt.subplots(1,2)
-        fig.set_size_inches(12, 5)
+        fig.set_size_inches(20, 7)
         ax[0].set_title("True")
         ax[1].set_title("Predicted") 
-        seaborn.heatmap(W0, cmap = palette, center = 0, ax=ax[0])
-        seaborn.heatmap(W0_pred, cmap = palette, center = 0, ax=ax[1])
-        plt.show()
+        fig.suptitle(f"{dataset_params.cluster_sizes}, epoch: {epoch}")
+        seaborn.heatmap(W0.cpu(), cmap = palette, center = 0, ax=ax[0])
+        seaborn.heatmap(W0_pred.cpu(), cmap = palette, center = 0, ax=ax[1])
+        plt.savefig(f"{path}/pred_epoch_{epoch}.png") 
+        #plt.show()
 
         # W0_scaled = np.tanh(W0.cpu().numpy())
         # seaborn.heatmap(W0_scaled, cmap = palette, center = 0, linecolor='black')
@@ -53,10 +55,11 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
     )
 
     model = model(model_params)
-    print("You are here: ", os.path.abspath(os.getcwd()))
     model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.foldername}/epoch_{epoch}.pt", map_location=torch.device(device)))
     model.to(device)
     criterion = torch.nn.MSELoss()
+
+    path = f"saved_models/{model.NAME}/{dataset_params.foldername}"
 
     model.eval()
     avg_loss = 0
@@ -71,7 +74,7 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
             loss = criterion(y_hat, y)
             avg_loss += loss.item()
 
-            plot_pred(y, y_hat)
+        plot_pred(y, y_hat, path, epoch, dataset_params)
 
     avg_test_loss = avg_loss / len(test_loader)
     log.info(f"Avg test loss: {avg_test_loss}")
