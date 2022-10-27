@@ -1,4 +1,4 @@
-from neuro_ml.dataset import create_test_dataloader
+from neuro_ml.dataset import create_dataloaders
 import torch
 import torch
 from tqdm import tqdm
@@ -10,7 +10,7 @@ import numpy as np
 import os
 
 
-def plot_graph(self) -> None:    #Use this to plot the graph!!! 
+def plot_graph(self) -> None:    #Use this to plot the graph
         """Plots the graph of the connectivity filter"""
         data = Data(num_nodes=self.W0.shape[0], edge_index=self._edge_index)
         graph = to_networkx(data, remove_self_loops=True)
@@ -27,31 +27,31 @@ def plot_connectivity(W0):
         plt.show()
 
 
-def plot_pred(W0, W0_pred, path, epoch, dataset_params):
+def plot_pred(W0, W0_pred, path, epoch, dataset_params, loss):
         """Plots the connectivity filter"""
         palette = seaborn.color_palette("vlag", as_cmap=True)
 
-        fig, ax =plt.subplots(1,2)
-        fig.set_size_inches(20, 7)
-        ax[0].set_title("True")
-        ax[1].set_title("Predicted") 
-        fig.suptitle(f"{dataset_params.cluster_sizes}, epoch: {epoch}")
+        diff = W0 - W0_pred
+
+        fig, ax = plt.subplots(1,3)
+        fig.set_size_inches(30, 7)
+        ax[0].set_title("True", fontsize=20)
+        ax[1].set_title("Predicted", fontsize=20) 
+        ax[2].set_title("Difference", fontsize=20)
+
+        fig.suptitle(f"{dataset_params.cluster_sizes}, epoch: {epoch}, loss: {loss:.4f}", fontsize=24)
         seaborn.heatmap(W0.cpu(), cmap = palette, center = 0, ax=ax[0])
         seaborn.heatmap(W0_pred.cpu(), cmap = palette, center = 0, ax=ax[1])
+        seaborn.heatmap(diff.cpu(), cmap = palette, center = 0, ax=ax[2])
         plt.savefig(f"{path}/pred_epoch_{epoch}.png") 
-        #plt.show()
-
-        # W0_scaled = np.tanh(W0.cpu().numpy())
-        # seaborn.heatmap(W0_scaled, cmap = palette, center = 0, linecolor='black')
-        # plt.show()
 
 
-#This is never used 
+
 def test_model(model, epoch, dataset_params, model_params, model_is_classifier, device):  
-    test_loader = create_test_dataloader(
-        model.DATASET,
-        dataset_params,
+    _, _, test_loader = create_dataloaders(
+        model.DATASET, 
         model_is_classifier,
+        dataset_params, 
     )
 
     model = model(model_params)
@@ -74,7 +74,7 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
             loss = criterion(y_hat, y)
             avg_loss += loss.item()
 
-        plot_pred(y, y_hat, path, epoch, dataset_params)
+        plot_pred(y, y_hat, path, epoch, dataset_params, loss.item())
 
     avg_test_loss = avg_loss / len(test_loader)
     log.info(f"Avg test loss: {avg_test_loss}")

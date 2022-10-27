@@ -5,7 +5,7 @@ from zenlog import log
 from neuro_ml import config
 from neuro_ml.fit.val import val
 from neuro_ml.fit.train import train
-from neuro_ml.dataset import create_train_val_dataloaders, create_test_dataloader
+from neuro_ml.dataset import create_dataloaders
 
 
 
@@ -19,7 +19,7 @@ def fit(
     learing_rate=config.LEARNING_RATE,
 ):
     # Prepare data loaders for training and validation
-    train_loader, val_loader = create_train_val_dataloaders(
+    train_loader, val_loader, _ = create_dataloaders(
         model.DATASET, model_is_classifier, dataset_params
     )
 
@@ -41,6 +41,8 @@ def fit(
     file.write("epoch,train_loss,val_loss\n")
     file.close()
 
+    best_loss = 1
+
     # For each epoch calculate training and validation loss
     for epoch in range(1, epochs+1):
         train_loss = train(model, train_loader, optimizer, criterion, device)
@@ -52,7 +54,15 @@ def fit(
         file.write(f"{epoch},{train_loss},{val_loss}\n")
         file.close()
 
+        best_filename = dataset_params.foldername + f"/epoch_best.pt"
+
+        if val_loss < best_loss:
+            model.save(dataset_params.network_type, dataset_params.foldername, best_filename)
+            best_epoch = epoch
+            best_loss = val_loss
+
         if (epoch % 20) == 0 or epoch == epochs:
             filename = dataset_params.foldername + f"/epoch_{epoch}.pt"
             model.save(dataset_params.network_type, dataset_params.foldername, filename)
 
+    print(f"Best validation loss obtained in epoch {best_epoch} with {best_loss:.4f}.")

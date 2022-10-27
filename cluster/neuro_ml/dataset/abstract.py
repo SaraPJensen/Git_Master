@@ -23,6 +23,8 @@ class AbstractDataset(Dataset):
             model_is_classifier,
         )
 
+        self.output_dim = dataset_params.output_dim
+
     def __len__(self):
         raise NotImplementedError(
             "Length of dataset is not implemented for abstract dataset"
@@ -95,7 +97,8 @@ class AbstractDataset(Dataset):
                     self.X.append(x_slice.float())
                     self.y.append(y.float())
 
-    def _create_edge_indices(self, n_neurons):
+
+    def _create_edge_indices(self, output_dim):   #Not in use, this would be cheating
         """
         For each simulation in the dataset create an edge index based on the non-zero elements of W_0
         """
@@ -107,12 +110,13 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#432818",
         ):
-            y = y.reshape(n_neurons, n_neurons)   #Presumably its already of this shape? 
+            #y = y.reshape(output_dim, output_dim)   #Presumably its already of this shape? 
             edge_index = torch.nonzero(y)  #Returns the indices of the non-zero elements
 
             self.edge_index.append(edge_index.T)  #Initial hypothesis for W_0, this is G' 
 
-    def _create_fully_connected_edge_index(self, n_neurons):
+
+    def _create_fully_connected_edge_index(self, output_dim):
         """
         For each simulation in the dataset create a fully connected edge index
         """
@@ -125,12 +129,9 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#432818",
         ):
-            edge_index = torch.ones(n_neurons, n_neurons)  #Set all the connections to 1
+            edge_index = torch.ones(output_dim, output_dim)  #Set all the connections to 1
             self.edge_index.append(edge_index.nonzero().T) #Returns the indices of the non-zero elements, i.e. all of them in this case
-        
-        # print("Initial edge index length: ", len(self.edge_index))
-        # print("edge index slice shape: ", self.edge_index[0].shape)
-        # print("Edge index slice: ", self.edge_index[0])
+
 
     def create_geometric_data(self):   #Somehow in use...
         """

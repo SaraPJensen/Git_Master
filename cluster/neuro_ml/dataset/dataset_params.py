@@ -21,10 +21,10 @@ class DatasetParams:
     n_timesteps: int
     timestep_bin_length: int
     number_of_files: int
+    output_dim: int
 
     @property
     def foldername(self):
-        #return f"{self.simulation_enum.name}_{self.n_neurons}_neurons_{self.n_timesteps}_timesteps"
         return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}" 
 
     

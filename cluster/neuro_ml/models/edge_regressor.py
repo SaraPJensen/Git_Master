@@ -9,8 +9,9 @@ import torch.nn as nn
 
 @dataclass
 class EdgeRegressorParams:
-    n_shifts: int #= 10
-    n_neurons: int #= 20
+    n_shifts: int 
+    n_neurons: int 
+    output_dim: int
 
 class EdgeRegressor(MessagePassing):
     """
@@ -26,11 +27,14 @@ class EdgeRegressor(MessagePassing):
         super().__init__()
         self.n_shifts = params.n_shifts # M, number of time steps for which we consider the influence of i  on j forward in time
         self.n_neurons = params.n_neurons # N, number of neurons in the network
+        #self.n_clusters = params.n_clusters # Number of clusters in the network
         self.selection_matrix = (torch.eye(self.n_neurons)
                 .repeat_interleave(self.n_neurons, dim=0)) # Matrix that selects the j-th neuron in the MLP_1 output
                 #repeat_interleave repeats each element n_neurons times
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        #self.output_dim = params.output_dim 
 
         self.mlp1 = Seq(
             Linear(params.n_shifts, params.n_neurons),
@@ -41,14 +45,20 @@ class EdgeRegressor(MessagePassing):
             ReLU(),
             Linear(params.n_neurons, 1)
             ) # First MLP
+        
         self.mlp2 = Seq(
             Linear(params.n_neurons, 10*params.n_neurons),
             ReLU(),
-            Linear(10*params.n_neurons, params.n_neurons)
-        ) # Second MLP
+            Linear(10*params.n_neurons, params.output_dim)
+        ) 
+        # Second MLP
 
+        # self.mlp2 = Seq(
+        #     Linear(params.n_neurons, 10*params.n_neurons),
+        #     ReLU(),
+        #     Linear(10*params.n_neurons, params.n_neurons)
+        # ) # Second MLP
 
-        #Maybe use He initialization instead? 
         with torch.no_grad():
             nn.init.kaiming_normal_(self.mlp1[0].weight)
             nn.init.kaiming_normal_(self.mlp1[2].weight)
@@ -56,6 +66,7 @@ class EdgeRegressor(MessagePassing):
 
             nn.init.kaiming_normal_(self.mlp2[0].weight)
             nn.init.kaiming_normal_(self.mlp2[2].weight)
+
 
     def forward(self, x, edge_index):
         # x has shape [N, n_shitfs]
