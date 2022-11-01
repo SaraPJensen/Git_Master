@@ -7,6 +7,11 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
 from scipy.sparse import coo_matrix
+from elephant.statistics import instantaneous_rate
+from elephant.kernels import GaussianKernel
+from quantities import ms, s, Hz
+from neo.core import SpikeTrain
+
 
 
 class AbstractDataset(Dataset):
@@ -18,9 +23,9 @@ class AbstractDataset(Dataset):
     ) -> None:
         super().__init__()
 
-        self.output_dim = dataset_params.output_dim
         self.n_remaining = dataset_params.n_neurons_remaining
         self.n_initial = dataset_params.n_neurons
+        self.time_dep = dataset_params.time_dep
         self.transform = Subset(dataset_params.neurons_remove, dataset_params.n_neurons)
 
         self._load_x_and_y(   #Defines self.X and self.y
@@ -61,10 +66,10 @@ class AbstractDataset(Dataset):
             # Convert sparse X to dense
             raw_data = np.load(filename, allow_pickle=True)
             raw_x = raw_data["X_sparse"].item()
-            W0 = raw_data["W0"] 
 
-            W0_hubs = raw_data["W0_hubs"]
-            edge_index_hubs = raw_data["edge_index_hubs"]
+            #W0 = raw_data["W0"] 
+            #W0_hubs = raw_data["W0_hubs"]
+            #edge_index_hubs = raw_data["edge_index_hubs"]
 
             # for key in raw_data.keys():
             #     print(key)                  
@@ -77,22 +82,6 @@ class AbstractDataset(Dataset):
             shape = coo.shape
 
             X = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to_dense() #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
-
-            # If model is a classifier, one-hot encode the weight matrix (the connectivity matrix, the ground truth), shape [n_neurons, n_neurons]
-
-            if self.output_dim == self.n_remaining: 
-                y = (    
-                    self.one_hot(torch.tensor(W0))
-                    if model_is_classifier
-                    else torch.tensor(W0)  
-                )
-            
-            else:     #Use the low dimensional W0_hubs
-                y = (    
-                    self.one_hot(torch.tensor(W0_hubs))
-                    if model_is_classifier
-                    else torch.tensor(W0_hubs)   
-                )
 
             # Cut X into windows of length timestep_bin_length and append
             for i in range(
@@ -107,14 +96,55 @@ class AbstractDataset(Dataset):
                     * (i + 1),
                 ]
                 if x_slice.any():
-                    x, y = self.transform(x_slice.float(), y.float())
+                    x= self.transform(x_slice.float())
+                    y = self.smooth_X(X)
                     self.X.append(x)
                     self.y.append(y)
-                    #self.X.append(x_slice.float())
-                    #self.y.append(y.float())
 
 
-    def _create_edge_indices(self, output_dim):   #Not in use, this would be cheating
+
+    def smooth_X(self, X):
+        self.time_dep = 1
+        smooth_X = torch.empty((self.n_remaining, self.time_dep))
+
+        tot_timesteps = X.shape[1]
+        period = tot_timesteps//self.time_dep
+
+
+        for neuron in range(self.n_remaining):
+            current_spike = X[neuron, :].numpy()
+
+            spikes = SpikeTrain(np.flatnonzero(current_spike), units = ms, t_stop = tot_timesteps * ms)
+
+            current_spikes = spikes
+
+            insert = instantaneous_rate(spikes, sampling_period = period * ms, kernel = GaussianKernel(period * ms))
+
+            smooth_X[neuron, :] = torch.from_numpy(insert.as_array()).flatten()
+
+            current_smooth = smooth_X[neuron, :].numpy()
+
+            # if neuron > 0: 
+            #     if np.array_equal(current_spike, previous_spike):
+            #         print("Spike trains are identical!")
+
+            #     if np.array_equal(current_spikes.as_array(), previous_spikes.as_array()):
+            #         print("Spiketrain objects are equal!")
+
+            #     if np.array_equal(current_smooth, previous_smooth): 
+            #         print("Smooth versions are identical!!")
+
+            previous_smooth = current_smooth
+            previous_spike = current_spike
+            previous_spikes = current_spikes
+
+            #print(smooth_X[neuron, :])
+ 
+
+        return smooth_X
+
+
+    def _create_edge_indices(self, n_neurons):   #Not in use, this would be cheating
         """
         For each simulation in the dataset create an edge index based on the non-zero elements of W_0
         """
@@ -126,13 +156,13 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#432818",
         ):
-            y = y.reshape(output_dim, output_dim)   #Presumably its already of this shape? 
+            y = y.reshape(n_neurons, n_neurons)   #Presumably its already of this shape? 
             edge_index = torch.nonzero(y)  #Returns the indices of the non-zero elements
 
             self.edge_index.append(edge_index.T)  #Initial hypothesis for W_0, this is G' 
 
 
-    def _create_fully_connected_edge_index(self, output_dim):   #output_dim should be n_neurons
+    def _create_fully_connected_edge_index(self, n_neurons):   #n_neurons should be n_neurons
         """
         For each simulation in the dataset create a fully connected edge index
         """
@@ -148,7 +178,7 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#432818",
         ):
-            edge_index = torch.ones(output_dim, output_dim)  #Set all the connections to 1
+            edge_index = torch.ones(n_neurons, n_neurons)  #Set all the connections to 1
             self.edge_index.append(edge_index.nonzero().T) #Returns the indices of the non-zero elements, i.e. all of them in this case
 
 

@@ -30,12 +30,14 @@ def fit_edge_classifier(dataset_params):
 
 def edge_regressor(dataset_params, mode, model_epoch = "best"):
     # Set the number of time steps we want to calculate co-firing rates for and the number of neurons
-    edge_regressor_params = EdgeRegressorParams(n_shifts=10, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.output_dim)
+    edge_regressor_params = EdgeRegressorParams(n_shifts=10, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.time_dep)
 
-    if dataset_params.dim == "high":
-        model_name = EdgeRegressor
-    else: 
-        model_name = OuterModel
+    model_name = EdgeRegressor
+    
+    # if dataset_params.dim == "high":
+    #     model_name = EdgeRegressor
+    # else: 
+    #     model_name = OuterModel
 
     if mode == "train": 
     # Fit the model
@@ -59,21 +61,16 @@ if __name__ == "__main__":
     cluster_sizes = [10, 10] #[30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
     n_clusters = len(cluster_sizes)
     n_neurons=sum(cluster_sizes)
-    n_timesteps = 200000
-    timestep_bin_length = 200000
-    number_of_files = 200 
-    dim = "high"
+    time_dep = 1
+    n_timesteps = 100000
+    timestep_bin_length = 100000
+    number_of_files = 150 
 
-    neurons_remove = 5
+    neurons_remove = 0
     n_neurons_remaining = n_neurons - neurons_remove
 
-    #mode = "train"
-    mode = "test"
-
-    if dim == "high":
-        output_dim = n_neurons_remaining
-    elif dim == "low":
-        output_dim = n_clusters
+    mode = "train"
+    #mode = "test"
 
     print("Cluster sizes: ", cluster_sizes)
     print(f"Removing {neurons_remove} neurons")
@@ -85,11 +82,10 @@ if __name__ == "__main__":
         n_neurons,
         n_neurons_remaining,
         neurons_remove,
+        time_dep,
         n_timesteps,
         timestep_bin_length,
         number_of_files,
-        output_dim,
-        dim
     )
 
     edge_regressor(dataset_params, mode)

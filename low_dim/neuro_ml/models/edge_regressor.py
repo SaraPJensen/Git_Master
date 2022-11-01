@@ -33,7 +33,7 @@ class EdgeRegressor(MessagePassing):
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        #self.output_dim = params.output_dim 
+        self.output_dim = params.output_dim
 
         self.mlp1 = Seq(
             Linear(params.n_shifts, self.n_neurons),
@@ -48,22 +48,8 @@ class EdgeRegressor(MessagePassing):
         self.mlp2 = Seq(
             Linear(self.n_neurons, 10*self.n_neurons),
             ReLU(),
-            Linear(10*self.n_neurons, self.n_neurons)
-        ) 
-
-        self.dim_red = Seq(
-            Linear(self.n_neurons, 10*self.n_neurons),
-            ReLU(),
-            Linear(10*self.n_neurons, params.output_dim)    #When this is included, it returns a matrix of size [n_neurons, n_clusters]
-        )
-
-        # Second MLP
-
-        # self.mlp2 = Seq(
-        #     Linear(self.n_neurons, 10*self.n_neurons),
-        #     ReLU(),
-        #     Linear(10*self.n_neurons, self.n_neurons)
-        # ) # Second MLP
+            Linear(10*self.n_neurons, self.output_dim)
+        ) # Second MLP
 
         with torch.no_grad():
             nn.init.kaiming_normal_(self.mlp1[0].weight)
@@ -80,8 +66,6 @@ class EdgeRegressor(MessagePassing):
         # edge_index has shape [2, E], one layer for each direction
         high_dim = self.propagate(edge_index, x=x)   #This calls message and update, shape of answer is [n_neurons, n_neurons], this is just the output from MLP2 
         #print("High dim shape: ", high_dim.shape)
-        low_dim = self.dim_red(high_dim)
-        #print("Low dim shape: ", low_dim.shape)
 
         return high_dim
 
@@ -146,12 +130,6 @@ class EdgeRegressor(MessagePassing):
             os.mkdir(f"saved_models/{self.NAME}/{save_folder}/remove_{n_remove}") 
 
         return f"saved_models/{self.NAME}/{save_folder}/remove_{n_remove}"
-
-
-    # def save(self, network_type, save_folder, filename):
-    #     # Saves the model to file
-    #     torch.save(self.state_dict(), f"saved_models/{self.NAME}/{filename}")
-
 
 
 

@@ -42,6 +42,8 @@ def create_dataloaders(
 
         if frequency > 50: 
             all_filenames.remove(filename)
+
+        #print("Frequency: ", frequency)
     
     print("Datasets remaining after removing exploding datasets: ", len(all_filenames))
 

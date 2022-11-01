@@ -9,12 +9,12 @@ class DatasetParams:
     cluster_sizes: list[int]
     n_neurons: int
     n_neurons_remaining: int
-    neurons_remove : int
+    neurons_remove: int
+    time_dep: int
     n_timesteps: int
     timestep_bin_length: int
     number_of_files: int
-    output_dim: int
-    dim: str
+
 
 
     @property
@@ -24,7 +24,7 @@ class DatasetParams:
     
     @property
     def save_folder(self):
-        return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_dim_{self.dim}"
+        return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_timedep_{self.time_dep}"
 
 
 

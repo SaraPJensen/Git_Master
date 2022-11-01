@@ -12,25 +12,16 @@ class Subset(object):
         self.n_remove = n_remove      #Number of neurons to remove
         self.n_initial = n_initial    #The initial number of neurons
 
-    def __call__(self, X, W0):
+    def __call__(self, X):
         
         delete = np.random.choice(range(self.n_initial), size= (self.n_remove), replace = False)
 
         all = np.arange(0, self.n_initial)
 
         keep = [neuron for neuron in all if neuron not in delete]
-
-        # print("delete: ", delete)
-        # print("keep: ", keep)
-
         X = X[keep, :]
-        W0 = W0[:, keep]
-        W0 = W0[keep, :]
 
-        # print("X shape: ", X.shape)
-        # print("W0 shape: ", W0.shape)
-
-        return X, W0
+        return X
 
 
 
