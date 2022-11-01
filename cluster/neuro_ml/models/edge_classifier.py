@@ -17,13 +17,13 @@ class EdgeClassifier(torch.nn.Module):
 
     def __init__(self, params):
         super().__init__()
-        self.n_neurons = params.n_neurons
+        self.n_neurons = params.n_neurons_remaining
         self.n_classes = params.n_classes
         self.edge_embedding = EdgeRegressor(params)
         self.classifier = Seq(
-                Linear(params.n_neurons, params.n_neurons),
+                Linear(self.n_neurons, self.n_neurons),
                 ReLU(),
-                Linear(params.n_neurons, params.n_classes*params.n_neurons)
+                Linear(self.n_neurons, params.n_classes * self.n_neurons)
         )
 
     def forward(self, x, other_inputs):

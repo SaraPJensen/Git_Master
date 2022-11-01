@@ -2,6 +2,7 @@ import math
 import torch
 import torch.nn.functional as F
 import numpy as np
+from neuro_ml.dataset.transforms import Subset
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
@@ -17,13 +18,16 @@ class AbstractDataset(Dataset):
     ) -> None:
         super().__init__()
 
+        self.output_dim = dataset_params.output_dim
+        self.n_remaining = dataset_params.n_neurons_remaining
+        self.n_initial = dataset_params.n_neurons
+        self.transform = Subset(dataset_params.neurons_remove, dataset_params.n_neurons)
+
         self._load_x_and_y(   #Defines self.X and self.y
             filenames,
             dataset_params,
             model_is_classifier,
         )
-
-        self.output_dim = dataset_params.output_dim
 
     def __len__(self):
         raise NotImplementedError(
@@ -75,11 +79,20 @@ class AbstractDataset(Dataset):
             X = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to_dense() #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
 
             # If model is a classifier, one-hot encode the weight matrix (the connectivity matrix, the ground truth), shape [n_neurons, n_neurons]
-            y = (    
-                self.one_hot(torch.tensor(W0))
-                if model_is_classifier
-                else torch.tensor(W0)
-            )
+
+            if self.output_dim == self.n_remaining: 
+                y = (    
+                    self.one_hot(torch.tensor(W0))
+                    if model_is_classifier
+                    else torch.tensor(W0)  
+                )
+            
+            else:     #Use the low dimensional W0_hubs
+                y = (    
+                    self.one_hot(torch.tensor(W0_hubs))
+                    if model_is_classifier
+                    else torch.tensor(W0_hubs)   
+                )
 
             # Cut X into windows of length timestep_bin_length and append
             for i in range(
@@ -94,8 +107,11 @@ class AbstractDataset(Dataset):
                     * (i + 1),
                 ]
                 if x_slice.any():
-                    self.X.append(x_slice.float())
-                    self.y.append(y.float())
+                    x, y = self.transform(x_slice.float(), y.float())
+                    self.X.append(x)
+                    self.y.append(y)
+                    #self.X.append(x_slice.float())
+                    #self.y.append(y.float())
 
 
     def _create_edge_indices(self, output_dim):   #Not in use, this would be cheating
@@ -110,18 +126,21 @@ class AbstractDataset(Dataset):
             leave=False,
             colour="#432818",
         ):
-            #y = y.reshape(output_dim, output_dim)   #Presumably its already of this shape? 
+            y = y.reshape(output_dim, output_dim)   #Presumably its already of this shape? 
             edge_index = torch.nonzero(y)  #Returns the indices of the non-zero elements
 
             self.edge_index.append(edge_index.T)  #Initial hypothesis for W_0, this is G' 
 
 
-    def _create_fully_connected_edge_index(self, output_dim):
+    def _create_fully_connected_edge_index(self, output_dim):   #output_dim should be n_neurons
         """
         For each simulation in the dataset create a fully connected edge index
         """
         #this is of length 70 (no. of training samples), each element is a 2xN tensor, where N is the number of edges in the graph, one layer for each direction
-        #So all nodes are bidirectionally connected to all nodes 
+        #So all nodes are initially assumed to be bidirectionally connected to all nodes
+        
+        # The edge index must include all the neurons
+
         self.edge_index = []   
         for y in tqdm(
             self.y,

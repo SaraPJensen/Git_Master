@@ -55,11 +55,11 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
     )
 
     model = model(model_params)
-    model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.foldername}/epoch_{epoch}.pt", map_location=torch.device(device)))
+    model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.save_folder}/remove_{dataset_params.neurons_remove}/epoch_{epoch}.pt", map_location=torch.device(device)))
     model.to(device)
     criterion = torch.nn.MSELoss()
 
-    path = f"saved_models/{model.NAME}/{dataset_params.foldername}"
+    path = f"saved_models/{model.NAME}/{dataset_params.save_folder}/remove_{dataset_params.neurons_remove}"
 
     model.eval()
     avg_loss = 0
@@ -73,6 +73,8 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
 
             loss = criterion(y_hat, y)
             avg_loss += loss.item()
+
+            t.set_description(f"Test loss: {loss:.4f}/({avg_loss/(batch_idx + 1):.4f})")
 
         plot_pred(y, y_hat, path, epoch, dataset_params, loss.item())
 

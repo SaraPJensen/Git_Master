@@ -20,7 +20,7 @@ def fit(
 ):
     # Prepare data loaders for training and validation
     train_loader, val_loader, _ = create_dataloaders(
-        model.DATASET, model_is_classifier, dataset_params
+        model.DATASET, model_is_classifier, dataset_params    #This is the only one which needs the initial number of neurons
     )
 
     # Initialize model
@@ -36,8 +36,8 @@ def fit(
 
     log.debug(f"Fitting {model.__class__.__name__} on {device}")
 
-    loss_name = model.makedirs(dataset_params.network_type, dataset_params.foldername)
-    file = open(f"{loss_name}/loss.csv", "w")
+    loss_folder = model.makedirs(dataset_params.network_type, dataset_params.save_folder, dataset_params.neurons_remove)
+    file = open(f"{loss_folder}/loss.csv", "w")
     file.write("epoch,train_loss,val_loss\n")
     file.close()
 
@@ -50,19 +50,23 @@ def fit(
         log.info(
             f"{epoch}) train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-        file = open(f"{loss_name}/loss.csv", "a")
+        file = open(f"{loss_folder}/loss.csv", "a")
         file.write(f"{epoch},{train_loss},{val_loss}\n")
         file.close()
 
-        best_filename = dataset_params.foldername + f"/epoch_best.pt"
+        #best_filename = dataset_params.save_folder + f"/epoch_best.pt"
+        #f"saved_models/{self.NAME}/{save_folder}"
 
         if val_loss < best_loss:
-            model.save(dataset_params.network_type, dataset_params.foldername, best_filename)
+            torch.save(model.state_dict(), f"{loss_folder}/epoch_best.pt")
+            #model.save(dataset_params.network_type, dataset_params.save_folder, best_filename)
             best_epoch = epoch
             best_loss = val_loss
 
         if (epoch % 20) == 0 or epoch == epochs:
-            filename = dataset_params.foldername + f"/epoch_{epoch}.pt"
-            model.save(dataset_params.network_type, dataset_params.foldername, filename)
+            torch.save(model.state_dict(), f"{loss_folder}/epoch_{epoch}.pt")
+
+            #filename = dataset_params.save_folder + f"/epoch_{epoch}.pt"
+            #model.save(dataset_params.network_type, dataset_params.save_folder, filename)
 
     print(f"Best validation loss obtained in epoch {best_epoch} with {best_loss:.4f}.")

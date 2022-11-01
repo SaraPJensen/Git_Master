@@ -16,8 +16,10 @@ class TimeSeriesAndEdgeIndicesToWeightsDataset(AbstractDataset):  #Inherits the 
             dataset_params,
             is_classifier,
         )
+        
+        self._create_fully_connected_edge_index(dataset_params.n_neurons_remaining)  #Creates self.edge_index, fully connected as an initial hypothesis
 
-        self._create_fully_connected_edge_index(dataset_params.output_dim)  #Creates self.edge_index, fully connected as an initial hypothesis
+        #self._create_fully_connected_edge_index(dataset_params.output_dim)  #Creates self.edge_index, fully connected as an initial hypothesis
 
     def __len__(self):
         return len(self.X)
