@@ -58,10 +58,10 @@ if __name__ == "__main__":
 
     # Set the simulation, window size, and number of files to use
     network_type = "small_world"
-    cluster_sizes = [10, 10] #[30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
+    cluster_sizes = [20] #[30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
     n_clusters = len(cluster_sizes)
     n_neurons=sum(cluster_sizes)
-    time_dep = 1
+    time_dep = 3
     n_timesteps = 100000
     timestep_bin_length = 100000
     number_of_files = 150 

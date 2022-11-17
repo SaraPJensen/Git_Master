@@ -54,9 +54,6 @@ def fit(
         file.write(f"{epoch},{train_loss},{val_loss}\n")
         file.close()
 
-        #best_filename = dataset_params.save_folder + f"/epoch_best.pt"
-        #f"saved_models/{self.NAME}/{save_folder}"
-
         if val_loss < best_loss:
             torch.save(model.state_dict(), f"{loss_folder}/epoch_best.pt")
             #model.save(dataset_params.network_type, dataset_params.save_folder, best_filename)

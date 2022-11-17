@@ -20,6 +20,8 @@ def train(model, data_loader, optimizer, criterion, device):
         optimizer.zero_grad()
 
         y_hat = model(x, other_inputs)
+        # print("pred shape: ", y_hat.shape)
+        # print("Ground truth shape: ", y.shape)
         loss = criterion(y_hat, y)
         loss.backward()
         optimizer.step()

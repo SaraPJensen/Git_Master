@@ -104,7 +104,6 @@ class AbstractDataset(Dataset):
 
 
     def smooth_X(self, X):
-        self.time_dep = 1
         smooth_X = torch.empty((self.n_remaining, self.time_dep))
 
         tot_timesteps = X.shape[1]
