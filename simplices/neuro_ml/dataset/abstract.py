@@ -124,10 +124,10 @@ class AbstractDataset(Dataset):
                     * (i + 1),
                 ]
                 if x_slice.any():
-                    #x, y = self.transform(x_slice.float(), y.float())
-                    #self.X.append(x_slice.float())
+                    #x, y = self.transform(x_slice.float(), y.float())   #Removing neurons to introduce confounding factors
+                    self.X.append(x_slice.float())
 
-                    self.X.append(torch.from_numpy(W0).float())  #use this as input instead to find a network able to learn from the connectivity matrix
+                    #self.X.append(torch.from_numpy(W0).float())  #use this as input instead to find a network able to learn from the connectivity matrix
                     self.y.append(y.float())
 
 

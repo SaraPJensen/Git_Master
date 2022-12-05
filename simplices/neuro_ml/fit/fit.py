@@ -5,7 +5,7 @@ from zenlog import log
 from neuro_ml import config
 from neuro_ml.fit.val import val
 from neuro_ml.fit.train import train
-from neuro_ml.dataset import create_dataloaders
+from neuro_ml.dataset import create_dataloaders, connectivity_dataloaders
 
 
 
@@ -19,9 +19,11 @@ def fit(
     learing_rate=config.LEARNING_RATE,
 ):
     # Prepare data loaders for training and validation
-    train_loader, val_loader, _ = create_dataloaders(
-        model.DATASET, model_is_classifier, dataset_params    #This is the only one which needs the initial number of neurons
-    )
+    # train_loader, val_loader, _ = create_dataloaders(
+    #     model.DATASET, model_is_classifier, dataset_params    #This is the only one which needs the initial number of neurons
+    # )
+
+    train_loader, val_loader, _ = connectivity_dataloaders(dataset_params)
 
     # Initialize model
     model = model(model_params).to(device)

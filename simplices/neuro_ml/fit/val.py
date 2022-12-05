@@ -12,9 +12,14 @@ def val(model, data_loader, criterion, device):
         for batch_idx, batch in enumerate(
             (t := tqdm(data_loader, leave=False, colour="#FF5666"))
         ):
-            x, other_inputs, y = batch_to_device(batch, device)
+            #x, other_inputs, y = batch_to_device(batch, device)
 
-            y_hat = model(x, other_inputs)
+            x, y = batch
+            x = torch.squeeze(x.to(device)) 
+            y = torch.squeeze(y.to(device))
+
+            #y_hat = model(x, other_inputs)
+            y_hat = model(x)
 
             loss = criterion(y_hat, y)
 

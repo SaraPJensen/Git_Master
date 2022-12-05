@@ -16,7 +16,12 @@ def train(model, data_loader, optimizer, criterion, device):
     for batch_idx, batch in enumerate(
         (t := tqdm(data_loader, leave=False, colour="#7FEFBD"))
     ):  
-        x, other_inputs, y = batch_to_device(batch, device) # other inputs are the guessed edge indides 
+        #x, other_inputs, y = batch_to_device(batch, device) # other inputs are the guessed edge indides 
+
+        x, y = batch
+        x = torch.squeeze(x.to(device)) 
+        y = torch.squeeze(y.to(device))
+
         optimizer.zero_grad()
         
         # print()
@@ -24,7 +29,8 @@ def train(model, data_loader, optimizer, criterion, device):
         # print("Edge index input shape: ", other_inputs.shape)
         # print()
 
-        y_hat = model(x, other_inputs)
+        #y_hat = model(x, other_inputs)
+        y_hat = model(x)
         loss = criterion(y_hat, y)
         loss.backward()
         optimizer.step()

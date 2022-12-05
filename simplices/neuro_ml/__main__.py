@@ -2,7 +2,8 @@ from neuro_ml.dataset import DatasetParams #SimulationEnum
 from neuro_ml.models import (
     ModelParams,
     OuterModel,
-    Simplical
+    Simplicial_GCN,
+    Simplicial_MPN
 )
 from neuro_ml.fit import fit, test_model
 import torch
@@ -19,7 +20,8 @@ sys.excepthook = ultratb.FormattedTB(
 def simplex(dataset_params, mode, model_epoch = "best"):
     model_params = ModelParams(n_shifts=10, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.output_dim)
     
-    model_name = Simplical
+    model_name = Simplicial_GCN
+    #model_name = OuterModel
 
     if mode == "train": 
     # Fit the model
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     n_neurons=sum(cluster_sizes)
     n_timesteps = 100000
     timestep_bin_length = 100000
-    number_of_files = 150
+    number_of_files = 500
     output_dim = 5
 
     neurons_remove = 0
