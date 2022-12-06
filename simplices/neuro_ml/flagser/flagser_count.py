@@ -1,22 +1,28 @@
 import numpy as np
-
+from copy import copy
 
 class Vertex:
     """Create one object for each node in the graph and store the information about its connections"""
-    def __init__(self, id, level):
-        self.id = None    #Let this be a list of the constituent elements, containing a single number for level-0 vertices, 2 numbers for edges, 3 for a 2-simplex etc. 
-        self.targets = np.empty(0)   #These are currently lists of vertex objects, but could possibly contain the vertex-ids instead
-        self.sources = np.empty(0)
+    def __init__(self, level, id):  
+        self.targets = []     #These are currently lists of vertex objects, but could possibly contain the vertex-ids instead
+        self.sources = []  
         self.level = level
+        self.id = id   #Let this be a list of the constituent elements, containing a single number for level-0 vertices, 2 numbers for edges, 3 for a 2-simplex etc. 
 
-    def add_id(self, id):
-        self.id = id
+    def add_level_0(self, level_0):
+        self.level_0 = []   
+        for idx in self.id:
+            self.level_0.append(level_0[idx])   #A list of the vertex objects at level 0 to which this vertex is connected
+            
 
     def add_target(self, sink):    #Target are the vertices at the level below to which this vertex is connected - empty for level-0 vertices!
         self.targets.append(sink)   
     
     def add_source(self, source):  #Sources are the vertices at the level above to which this vertex is connected
         self.sources.append(source)
+
+    def add_U(self, U):   #A list of the sink level_0 vertices that, together with the vertex object itself, will form a higher level simplex
+        self.U = U
 
     def get_target(self):
         return self.targets     #Return the list of vertices at the level below to which this one is connected
@@ -26,9 +32,9 @@ class Vertex:
 
     def Ver_func(self):
         if len(self.id) == 1:
-            return []
+            self.id
         else:
-            return self.id   #This will be a list of all the level 0 vertices in the complex, given by their vertex-id 
+            return self.level_0   
 
 
 
@@ -42,71 +48,127 @@ class Directed_graph:
     """
 
     def __init__(self, vertices, edges):
-        self.number_of_vertices = np.len(vertices)
+        self.number_of_vertices = vertices
         self.edge_number, _ = edges.shape
 
         self.edges = edges
 
-        self.level_0 = np.empty(0)    #The vertices
-        self.level_1 = np.empty(0)    #The edges
+        self.level_0 = []       #The vertices
+        self.level_1 = []       #The edges
+
+        self.all_levels = [] 
 
         count_id = 0
         for vertex in vertices:
-            vertex_object = Vertex(0)
-            vertex_object.add_id(0)
-            self.level_0(vertex_object)
+            vertex_object = Vertex(0, count_id)
+            self.level_0.append(vertex_object)
             count_id += 1 
         
+        self.all_levels.append(self.level_0)
+        
+        self.all_levels.append([])
+
         for edge in edges:
-            edge_id = [edge[0]], [edge[1]]
-            edge_object = Vertex(1)
-            edge_object.add_id(edge_id)
+            edge_id = [edge[0], edge[1]]
+            edge_object = Vertex(1, edge_id)
+            edge_object.add_level_0(self.level_0)
 
             for vertex_id in edge_id:
-                self.edge_object.add_target(self.level_0[vertex_id])   #Add the vertex-objects to the list of outgoing edges
+                edge_object.add_target(self.level_0[vertex_id])   #Add the vertex-objects to the list of outgoing edges
                 self.level_0[vertex_id].add_source(edge_object)    #Add the edge_object to the list of incoming edges to each of the vertices
-
-            self.level_1.append(edge_object)
+            
+            self.all_levels[1].append(edge_object)
                 
                 
     def new_level(self, level):
+        self.all_levels.append(level)    #add a new level to the list, containing all the vertices at that level
+        
+    def new_vertex(self, level, vertex_object):
+        vertex_object.add_level_0(self.level_0)  #Send the level_0 vertices to each new vertex
 
-        simplex = Vertex(level)    #Assume id is not yet available, since this object is created before this is tested for
-        pass
+
+
+
+    
 
          
 
 
 
-def cell_count(Hasse_graph):
+def compute_cell_count(vertices, edges):
+    Hasse_graph = Directed_graph(vertices, edges)   #This contains the entire Hasse diagram
     Hasse_simplex = Hasse_graph    #These have the same level-0 and level-1 elements
 
-    U = np.empty(0)   #List of Vertex objects
-
-    #Iterate over the level-1 edges
-    for edge in Hasse_simplex.edges:  #Iterate over the edge list
+    #Iterate over the level-1 edges to find 2-simplicies of order [e, e_1, e_2]
+    for e, edge_object in zip(Hasse_simplex.edges, Hasse_simplex.all_levels[1]):  #Iterate over the edge list and the list of edge objects
+        U = []   #List of Vertex objects  
         #If two other edges (e1 and e2) have the same sink, and the source of e1 is the source of edge_object and the source of e2 is the sink of e2, add the sink vertex to the list 
-        for first_edge in Hasse_simplex.edges and edge != first_edge:
-            if edge[0] == first_edge[0]:
-                for second_edge in Hasse_simplex.edges and edge != second_edge and first_edge != second_edge_
-                    if second_edge[0] == edge[1] and second_edge[1] == second_edge[1]:
-                        U.append(Hasse_graph.level_0[second_edge[1]])  #Add the sink-vertex of the complex to the list
+        for e_1 in Hasse_simplex.edges:
+            if np.all(e == e_1):   
+                continue
+ 
+            if e[0] == e_1[0]:
+                for e_2 in Hasse_simplex.edges:
+                    if np.all(e == e_2) or np.all(e_1 == e_2):
+                        continue
+
+                    if e_2[0] == e[1] and e_2[1] == e_1[1]:
+                        U.append(Hasse_graph.level_0[e_2[1]])
+                        
+        edge_object.add_U(U)
             
     dim = 2
 
 
+    keep_going = True #True
+    while keep_going:
+        next_level_nodes = [] 
 
+        for top_vertex in Hasse_simplex.all_levels[-1]:   #Iterate over the top level vertices of the Hasse diagram
+            print("Number of top level simplicies: ", len(Hasse_simplex.all_levels[-1]))
 
+            for node in top_vertex.U:   #Iterate over the sink nodes of the top level vertex 
+                print("Top vertex id: ", top_vertex.id) 
+                print("Node id from U: ", node.id)    #It loops through this twice for the 3,1,0,2 simplex - but somehow the node.id gets changed!! 
+                vertex_id = copy(top_vertex.id)  
+                vertex_id.append(node.id) 
 
+                new_vertex = Vertex(dim, vertex_id)
+                Hasse_simplex.new_vertex(dim, new_vertex)
 
+                new_vertex.add_U(copy(top_vertex.U))    
+                new_vertex.add_target(top_vertex)
+                
+                top_vertex.add_source(new_vertex)
 
-def compute_cell_count(vertices, edges, direction):
+                for bd in top_vertex.get_target():   #Iterate over targets of top_vertex, i.e. elementes at the level below 
+                    print("bd id: ", bd.id)
+                    for cbd in bd.get_source():
+                        print("cbd id: ", cbd.id)
+
+                        if node.id == cbd.Ver_func()[-1].id: 
+                            print("Last node in cbd.Ver_func", cbd.Ver_func()[-1].id)
+                            print(f"Add {cbd.id} as a target of {new_vertex.id}")
+                            
+                            new_vertex.add_target(cbd)
+                            cbd.add_source(new_vertex)
+                            new_vertex.U = list(set(copy(new_vertex.U)) & set(copy(cbd.U)))
+                            print("Elements in U")
+                            for element in new_vertex.U:
+                                print(element.id)
+                            print("New vertex id: ", new_vertex.id)
+                            print()
+
+                next_level_nodes.append(new_vertex)
+
+        Hasse_simplex.new_level(next_level_nodes)
+        dim += 1
+        
+        if len(next_level_nodes) == 0: 
+            keep_going = False
+
+    return Hasse_simplex.all_levels
     
-    Hasse_graph = Directed_graph(vertices, directed)   #This contains the entire Hasse diagram
-    cell_count = count_cells(Hasse_graph)
-
-    return cell_count
-
 
 
 
@@ -146,7 +208,7 @@ def _extract_unweighted_graph(adjacency_matrix):
 
 
 
-def flagser_count_unweighted(adjacency_matrix, directed=True):
+def flagser_count_unweighted(adjacency_matrix):
     """Compute the cell count per dimension of a directed/undirected unweighted
     flag complex.
 
@@ -191,6 +253,30 @@ def flagser_count_unweighted(adjacency_matrix, directed=True):
     vertices, edges = _extract_unweighted_graph(adjacency_matrix)
 
     # Call flagser_count binding
-    cell_count = compute_cell_count(vertices, edges, directed)
+    cell_count = compute_cell_count(vertices, edges)
 
     return cell_count
+
+
+
+test = np.array([[0, 0, 0, 0],
+                [1, 0, 1, 0],
+                [1, 0, 0, 0],
+                [1, 1, 1, 0]])
+
+count = flagser_count_unweighted(test)
+
+print()
+print()
+print()
+
+
+level = 0
+for line in count:
+    if line:
+        print()
+        print("Vertices at level ", level)
+        for element in line:
+            print(element.id)
+
+    level += 1
