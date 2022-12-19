@@ -68,10 +68,10 @@ def fit(
             best_epoch = epoch
             best_loss = val_loss
 
-        if (epoch % 20) == 0 or epoch == epochs:
-            #torch.save(model.state_dict(), f"{loss_folder}/epoch_{epoch}.pt")
+        # if (epoch % 20) == 0 or epoch == epochs:
+        #     #torch.save(model.state_dict(), f"{loss_folder}/epoch_{epoch}.pt")
 
-            filename = loss_folder + f"/epoch_{epoch}.pt"
-            model.save(filename)
+        #     filename = loss_folder + f"/epoch_{epoch}.pt"
+        #     model.save(filename)
 
     print(f"Best validation obtained in epoch {best_epoch} with {best_loss:.4f}.")
