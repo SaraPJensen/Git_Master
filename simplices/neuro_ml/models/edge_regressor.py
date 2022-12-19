@@ -64,7 +64,7 @@ class EdgeRegressor(MessagePassing):
 
     def forward(self, x, edge_index):
         #print("Calling forward")
-        # x has shape [N, n_shitfs]
+        # x has shape [N, n_shifts]
         # edge_index has shape [2, E], one layer for each direction
         high_dim = self.propagate(edge_index, x=x)   #This calls message and update, shape of answer is [n_neurons, n_neurons], this is just the output from MLP2 
 

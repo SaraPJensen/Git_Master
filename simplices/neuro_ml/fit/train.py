@@ -1,5 +1,5 @@
 from tqdm import tqdm
-from neuro_ml.fit.batch_to_device import batch_to_device
+from neuro_ml.fit.batch_to_device import batch_to_device, simplex_batch_to_device
 import sklearn.metrics
 import torchmetrics
 import torch
@@ -16,21 +16,16 @@ def train(model, data_loader, optimizer, criterion, device):
     for batch_idx, batch in enumerate(
         (t := tqdm(data_loader, leave=False, colour="#7FEFBD"))
     ):  
-        #x, other_inputs, y = batch_to_device(batch, device) # other inputs are the guessed edge indides 
 
-        x, y = batch
-        x = torch.squeeze(x.to(device)) 
-        y = torch.squeeze(y.to(device))
+        x, edge_index, y = simplex_batch_to_device(batch, device)
 
         optimizer.zero_grad()
-        
-        # print()
-        # print("X input shape: ", x.shape)
-        # print("Edge index input shape: ", other_inputs.shape)
-        # print()
+        y_hat = model(edge_index, x)
 
-        #y_hat = model(x, other_inputs)
-        y_hat = model(x)
+        # print("Pred type: ", y_hat.dtype)
+        # print("Ground truth type: ", y.dtype)
+        # exit()
+
         loss = criterion(y_hat, y)
         loss.backward()
         optimizer.step()

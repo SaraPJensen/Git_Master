@@ -15,7 +15,7 @@ from pyflagser import flagser_unweighted
 
 def create_dataloaders(
     Dataset,
-    model_is_classifier,
+    #model_is_classifier,
     dataset_params,
     train_val_test_size=config.TRAIN_VAL_TEST_SIZE,
     seed=config.SEED,
@@ -29,23 +29,23 @@ def create_dataloaders(
         dataset_path / f"{seed}.npz" for seed in range(dataset_params.number_of_files)
     ]
 
-    for filename in all_filenames:   #Remove datasets where the network exploded, frequency over 50Hz
-        raw_data = np.load(filename, allow_pickle=True)
-        raw_x = raw_data["X_sparse"].item()
-        coo = coo_matrix(raw_x)
-        values = coo.data
-        indices = np.vstack((coo.row, coo.col))
-        i = torch.LongTensor(indices)
-        v = torch.FloatTensor(values)
-        shape = coo.shape
-        X = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to_dense() #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
-        tot_secs = dataset_params.n_timesteps/1000
-        frequency = torch.sum(X)/tot_secs/sum(dataset_params.cluster_sizes)
+    # for filename in all_filenames:   #Remove datasets where the network exploded, frequency over 50Hz
+    #     raw_data = np.load(filename, allow_pickle=True)
+    #     raw_x = raw_data["X_sparse"].item()
+    #     coo = coo_matrix(raw_x)
+    #     values = coo.data
+    #     indices = np.vstack((coo.row, coo.col))
+    #     i = torch.LongTensor(indices)
+    #     v = torch.FloatTensor(values)
+    #     shape = coo.shape
+    #     X = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to_dense() #X has shape (n_neurons, n_timesteps), with 1 indicating that the neuron fired at that time step
+    #     tot_secs = dataset_params.n_timesteps/1000
+    #     frequency = torch.sum(X)/tot_secs/sum(dataset_params.cluster_sizes)
 
-        if frequency > 50: 
-            all_filenames.remove(filename)
+    #     if frequency > 50: 
+    #         all_filenames.remove(filename)
     
-    print("Datasets remaining after removing exploding datasets: ", len(all_filenames))
+    # print("Datasets remaining after removing exploding datasets: ", len(all_filenames))
 
     # Split into train, val and test using the train_val_test_size from the config
     train_filenames, val_filenames, test_filenames = random_split(
@@ -63,19 +63,19 @@ def create_dataloaders(
     train_dataset = Dataset(
         train_filenames,
         dataset_params,
-        model_is_classifier,
+        #model_is_classifier,
     )
 
     val_dataset = Dataset(
         val_filenames,
         dataset_params,
-        model_is_classifier,
+        #model_is_classifier,
     )
 
     test_dataset = Dataset(
         test_filenames,
         dataset_params,
-        model_is_classifier,
+        #model_is_classifier,
     )
 
     # Pytorch geometric has a different data loader so if the dataset is geometric we use that

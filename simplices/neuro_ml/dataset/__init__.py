@@ -1,5 +1,6 @@
 from neuro_ml.dataset.create_dataloaders import create_dataloaders, connectivity_dataloaders
-from neuro_ml.dataset.time_series_and_edge_indices_to_weights import (
-    TimeSeriesAndEdgeIndicesToWeightsDataset,
-)
-from neuro_ml.dataset.dataset_params import DatasetParams #, SimulationEnum
+from neuro_ml.dataset.time_series_and_edge_indices_to_weights import TimeSeriesAndEdgeIndicesToWeightsDataset
+from neuro_ml.dataset.dataset_params import DatasetParams 
+
+from neuro_ml.dataset.W0_to_simplex import W0_to_simplex_Dataset
+from neuro_ml.dataset.simplex_abstract import SimplexAbstract

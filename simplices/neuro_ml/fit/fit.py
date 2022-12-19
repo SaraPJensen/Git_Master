@@ -18,12 +18,12 @@ def fit(
     epochs=config.EPOCHS,
     learing_rate=config.LEARNING_RATE,
 ):
-    # Prepare data loaders for training and validation
-    # train_loader, val_loader, _ = create_dataloaders(
-    #     model.DATASET, model_is_classifier, dataset_params    #This is the only one which needs the initial number of neurons
-    # )
+    #Prepare data loaders for training and validation
+    train_loader, val_loader, _ = create_dataloaders(
+        model.DATASET, dataset_params    #This is the only one which needs the initial number of neurons
+    )
 
-    train_loader, val_loader, _ = connectivity_dataloaders(dataset_params)
+    #train_loader, val_loader, _ = connectivity_dataloaders(dataset_params)
 
     # Initialize model
     model = model(model_params).to(device)
@@ -40,7 +40,8 @@ def fit(
 
     log.debug(f"Fitting {model.__class__.__name__} on {device}")
 
-    loss_folder = model.makedirs(dataset_params.network_type, dataset_params.save_folder, dataset_params.neurons_remove)
+    #loss_folder = model.makedirs(dataset_params.save_folder)
+    loss_folder = model.makedirs(dataset_params.network_type)
     file = open(f"{loss_folder}/loss.csv", "w")
     file.write("epoch,train_loss,val_loss\n")
     file.close()
@@ -73,4 +74,4 @@ def fit(
             filename = loss_folder + f"/epoch_{epoch}.pt"
             model.save(filename)
 
-    print(f"Best validation  obtained in epoch {best_epoch} with {best_loss:.4f}.")
+    print(f"Best validation obtained in epoch {best_epoch} with {best_loss:.4f}.")

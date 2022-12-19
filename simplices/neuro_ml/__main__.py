@@ -1,10 +1,15 @@
-from neuro_ml.dataset import DatasetParams #SimulationEnum
+from neuro_ml.dataset import DatasetParams 
 from neuro_ml.models import (
     ModelParams,
+    SimplexModelParams,
     OuterModel,
     Simplicial_GCN,
-    Simplicial_MPN
+    Simplicial_MPN,
+    Simplicial_MPN_simple,
+    Simplicial_MPN_speedup,
+    Outer_Simplicial
 )
+
 from neuro_ml.fit import fit, test_model
 import torch
 import sys
@@ -18,10 +23,9 @@ sys.excepthook = ultratb.FormattedTB(
 
 
 def simplex(dataset_params, mode, model_epoch = "best"):
-    model_params = ModelParams(n_shifts=10, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.output_dim)
+    model_params = SimplexModelParams(n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.output_dim)
     
-    model_name = Simplicial_GCN
-    #model_name = OuterModel
+    model_name = Outer_Simplicial
 
     if mode == "train": 
     # Fit the model
@@ -69,7 +73,7 @@ if __name__ == "__main__":
     n_timesteps = 100000
     timestep_bin_length = 100000
     number_of_files = 500
-    output_dim = 5
+    output_dim = 5    #Max simplex dimension
 
     neurons_remove = 0
     n_neurons_remaining = n_neurons - neurons_remove
@@ -78,7 +82,7 @@ if __name__ == "__main__":
     #mode = "test"
 
     print("Cluster sizes: ", cluster_sizes)
-    print(f"Removing {neurons_remove} neurons")
+    #print(f"Removing {neurons_remove} neurons")
     
     dataset_params = DatasetParams(
         network_type,
