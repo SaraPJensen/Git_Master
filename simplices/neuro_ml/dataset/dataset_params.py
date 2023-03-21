@@ -15,6 +15,7 @@ class DatasetParams:
     timestep_bin_length: int
     number_of_files: int
     output_dim: int
+    advanced: bool 
 
 
 

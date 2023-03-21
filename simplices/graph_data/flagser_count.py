@@ -322,7 +322,7 @@ if __name__ == "__main__":
                     [1, 0, 0, 0],
                     [1, 1, 1, 0]])
 
-    Hasse_simplex = flagser_count_unweighted(connectivity)
+    Hasse_simplex = flagser_count_unweighted(test)
 
     print()
 
@@ -343,13 +343,13 @@ if __name__ == "__main__":
         level += 1
 
 
-    # for node in Hasse_simplex.level_0:
-    #     print(node.simplex_count)
-    #     print()
+    for node in Hasse_simplex.level_0:
+        print(node.simplex_count)
+        print()
 
 
-    # flag_dict = flagser_unweighted(connectivity)    
-    # cell_count = flag_dict["cell_count"]
+    flag_dict = flagser_unweighted(test)    
+    cell_count = flag_dict["cell_count"]
 
     # print()
     # print("Flagser cell count: ", cell_count)

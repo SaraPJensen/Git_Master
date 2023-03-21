@@ -2,7 +2,7 @@ from neuro_ml.dataset import create_dataloaders
 import torch
 import torch
 from tqdm import tqdm
-from neuro_ml.fit.batch_to_device import batch_to_device
+from neuro_ml.fit.batch_to_device import batch_to_device, simplex_batch_to_device
 from zenlog import log
 import seaborn
 import matplotlib.pyplot as plt
@@ -49,17 +49,17 @@ def plot_pred(W0, W0_pred, path, epoch, dataset_params, loss):
 
 def test_model(model, epoch, dataset_params, model_params, model_is_classifier, device):  
     _, _, test_loader = create_dataloaders(
-        model.DATASET, 
-        model_is_classifier,
-        dataset_params, 
+        model.DATASET, dataset_params    
     )
 
+    aggr = "add"
+
     model = model(model_params)
-    model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.save_folder}/remove_{dataset_params.neurons_remove}/epoch_{epoch}.pt", map_location=torch.device(device)))
+    model.load_state_dict(torch.load(f"saved_models/{model.NAME}/{dataset_params.network_type}/neurons_{dataset_params.n_neurons}/{aggr}/epoch_{epoch}.pt", map_location=torch.device(device)))
     model.to(device)
     criterion = torch.nn.MSELoss()
 
-    path = f"saved_models/{model.NAME}/{dataset_params.save_folder}/remove_{dataset_params.neurons_remove}"
+    #path = f"saved_models/{model.NAME}/{dataset_params.save_folder}/remove_{dataset_params.neurons_remove}"
 
     model.eval()
     avg_loss = 0
@@ -67,16 +67,27 @@ def test_model(model, epoch, dataset_params, model_params, model_is_classifier, 
         for batch_idx, batch in enumerate(
             (t := tqdm(test_loader, leave=False, colour="#FF5666"))):
 
-            x, other_inputs, y = batch_to_device(batch, device)
+            #x, other_inputs, y = batch_to_device(batch, device)
 
-            y_hat = model(x, other_inputs) 
+            x, edge_index, y = simplex_batch_to_device(batch, device)
+
+            y_hat = torch.round(model(edge_index, x)) 
 
             loss = criterion(y_hat, y)
             avg_loss += loss.item()
 
             t.set_description(f"Test loss: {loss:.4f}/({avg_loss/(batch_idx + 1):.4f})")
 
-        plot_pred(y, y_hat, path, epoch, dataset_params, loss.item())
+            # print(y)
+            # print()
+            # print(torch.sum(y).item())
+            # print()
+            # print(y_hat)
+            # print()
+            # print()
+            # print()
+
+        #plot_pred(y, y_hat, path, epoch, dataset_params, loss.item())
 
     avg_test_loss = avg_loss / len(test_loader)
     log.info(f"Avg test loss: {avg_test_loss}")

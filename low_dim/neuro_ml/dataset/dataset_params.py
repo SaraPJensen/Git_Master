@@ -24,7 +24,7 @@ class DatasetParams:
     
     @property
     def save_folder(self):
-        return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_timedep_{self.time_dep}"
+        return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_threshold_{self.threshold}_timedep_{self.time_dep}"
 
 
 

@@ -50,34 +50,50 @@ class SimplexAbstract(Dataset):
             W0 = torch.from_numpy(all_data["W0"]).float()
             global_simplex = all_data["global_simplex"]
             neuron_simplex = all_data["neuron_simplex"]
-            #neuron_simplex = [torch.from_numpy(simplex).flatten() for simplex in neuron_simplex]
 
-            # simplex_tensor = torch.zeros((self.neurons, self.output_dim * 3), dtype=torch.float32)
-            # current_dim = neuron_simplex[0].shape[0]   #highest simplex order * 3
 
-            # for i in range(self.neurons):
-            #     simplex_tensor[i,0:current_dim] = torch.round(neuron_simplex[i])
-            #Shape: [num_neurons, output_dim * 3]
+            if dataset_params.advanced:
+            #This is the more complex version, where each node is associated with the number of simplicies in which it is source, sink and mediator
+                neuron_simplex = [torch.from_numpy(simplex).flatten() for simplex in neuron_simplex]
+                #print(neuron_simplex)
 
-            #For simplicity, only take the total number of simplicies each neurons is part of, regardless of role
-            simple_neuron_simplex = [torch.sum(torch.from_numpy(simplex), dim = 1) for simplex in neuron_simplex]
-            simple_simplex_tensor = torch.zeros((self.neurons, self.output_dim))
+                simplex_tensor = torch.zeros((self.neurons, (self.output_dim + 1) * 3), dtype=torch.float32)
+                current_dim = neuron_simplex[0].shape[0]   #highest simplex order * 3
 
-            current_dim = simple_neuron_simplex[0].shape[0] 
+                #print(current_dim)
+                
+                if current_dim <= self.output_dim + 1:
+                    for i in range(self.neurons):
+                        simplex_tensor[i, 0:current_dim] = neuron_simplex[i]
 
-            if current_dim <= self.output_dim:
-                for i in range(self.neurons):
-                    simple_simplex_tensor[i, 0:current_dim] = simple_neuron_simplex[i]
+                else:
+                    for i in range(self.neurons):
+                        simplex_tensor[i, 0:(self.output_dim+1)*3] = neuron_simplex[i][0:(self.output_dim+1)*3]
 
-            else:
-                for i in range(self.neurons):
-                    simple_simplex_tensor[i, 0:self.output_dim] = simple_neuron_simplex[i][0:self.output_dim]
+                new = simplex_tensor[:, 3:]   #Ignore the edges
 
-            #print(simple_simplex_tensor)
+
+            elif not dataset_params.advanced:   #+2 to only train on the 3-simplicies
+                #For simplicity, only take the total number of simplicies each neurons is part of, regardless of role
+                simple_neuron_simplex = [torch.sum(torch.from_numpy(simplex), dim = 1) for simplex in neuron_simplex]
+                simple_simplex_tensor = torch.zeros((self.neurons, self.output_dim +2))
+
+                current_dim = simple_neuron_simplex[0].shape[0] 
+
+                if current_dim <= self.output_dim +2:
+                    for i in range(self.neurons):
+                        simple_simplex_tensor[i, 0:current_dim] = simple_neuron_simplex[i]
+
+                else:
+                    for i in range(self.neurons):
+                        simple_simplex_tensor[i, 0:self.output_dim +2] = simple_neuron_simplex[i][0:self.output_dim +2]
+
+                new = simple_simplex_tensor[:, 2:]   #Ignore the edges
+
 
             self.W0.append(W0)
             self.edge_index.append(W0.nonzero().t())
-            self.y.append(simple_simplex_tensor)
+            self.y.append(new)
 
 
 
