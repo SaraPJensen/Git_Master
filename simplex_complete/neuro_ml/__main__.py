@@ -31,7 +31,7 @@ def fit_edge_classifier(dataset_params):
 
 def edge_regressor(dataset_params, mode, model_epoch = "best"):
     # Set the number of time steps we want to calculate co-firing rates for and the number of neurons
-    edge_regressor_params = EdgeRegressorParams(n_shifts=10, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.n_neurons_remaining)
+    edge_regressor_params = EdgeRegressorParams(n_shifts=dataset_params.n_shifts, n_neurons=dataset_params.n_neurons_remaining, output_dim = dataset_params.n_neurons_remaining)
     model_name = EdgeRegressor
 
     if mode == "train": 
@@ -45,11 +45,9 @@ def edge_regressor(dataset_params, mode, model_epoch = "best"):
         )
 
     elif mode == "simplex_test":
-        simplex_test(model_name, epoch=model_epoch, dataset_params=dataset_params, model_params = edge_regressor_params, model_is_classifier=False, device=device, max_threshold = 6)
+        simplex_test(model_name, epoch=model_epoch, dataset_params=dataset_params, model_params = edge_regressor_params, model_is_classifier=False, device=device, max_threshold = 7)
 
     else: test_model(model_name, epoch=model_epoch, dataset_params=dataset_params, model_params = edge_regressor_params, model_is_classifier=False, device=device)
-
-
 
 
 
@@ -61,11 +59,12 @@ if __name__ == "__main__":
     
     # Set the simulation, window size, and number of files to use
     network_type = "small_world"
-    cluster_sizes = [30] #[30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
+    cluster_sizes = [70] #[30] #[40] #[10, 10] #[30] #[24, 10, 12] #[20]
     n_clusters = len(cluster_sizes)
     n_neurons=sum(cluster_sizes)
     n_timesteps = 200000
     number_of_files = 200
+    n_shifts = 10
 
     simplex_threshold = 0   # Number of neurons in the smallest simplex kept
     weight_threshold = 0 # only keep edges with absolute value above this threshold 
@@ -77,11 +76,11 @@ if __name__ == "__main__":
     torch.cuda.manual_seed_all(config.SEED)
     neurons_remove = 0
     n_neurons_remaining = n_neurons - neurons_remove
-    mode = "train"
-    #mode = "test"
+    #mode = "train"
+    mode = "test"
     #mode = "simplex_test"
 
-    scaled_loss = True
+    scaled_loss = False
 
     print()
     print("Cluster sizes: ", cluster_sizes)
@@ -99,20 +98,19 @@ if __name__ == "__main__":
         number_of_files,
         weight_threshold,
         simplex_threshold,
-        scaled_loss
+        scaled_loss,
+        n_shifts
     )
 
     edge_regressor(dataset_params, mode)
 
 
-    # simplex_list = [0, 3, 4, 5]  
+    # simplex_list = [0, 3, 4, 5, 6]  
 
     # for simplex_threshold in simplex_list:
     #     torch.cuda.manual_seed_all(config.SEED)
     #     neurons_remove = 0
     #     n_neurons_remaining = n_neurons - neurons_remove
-    #     mode = "train"
-    #     #mode = "test"
 
     #     print()
     #     print("Cluster sizes: ", cluster_sizes)
@@ -130,7 +128,8 @@ if __name__ == "__main__":
     #         number_of_files,
     #         weight_threshold,
     #         simplex_threshold,
-    #         scaled_loss
+    #         scaled_loss,
+    #         n_shifts
     #     )
 
     #     edge_regressor(dataset_params, mode)
@@ -174,35 +173,37 @@ if __name__ == "__main__":
     # neurons_remove = 0
     # n_neurons_remaining = n_neurons - neurons_remove
 
-    all_sizes = [[10], [15], [20], [20, 20, 30], [20, 30, 10], [25], [30], [40], [50], [60], [70]]
+    # all_sizes = [[20], [25], [30], [40], [50], [60], [70]]
+    # #simplex_threshold = 2
 
-    for cluster_sizes in all_sizes:
-        n_clusters = len(cluster_sizes)
-        n_neurons=sum(cluster_sizes)
+    # for cluster_sizes in all_sizes:
+    #     n_clusters = len(cluster_sizes)
+    #     n_neurons=sum(cluster_sizes)
 
-        torch.cuda.manual_seed_all(config.SEED)
-        neurons_remove = 0
-        n_neurons_remaining = n_neurons - neurons_remove
-        mode = "train"
-        #mode = "test"
+    #     torch.cuda.manual_seed_all(config.SEED)
+    #     neurons_remove = 0
+    #     n_neurons_remaining = n_neurons - neurons_remove
+    #     #mode = "train"
+    #     #mode = "test"
 
-        print()
-        print("Cluster sizes: ", cluster_sizes)
-        print(f"Removing {neurons_remove} neurons")
-        print(f"Only keeping simplices containing at least {simplex_threshold} neurons")
+    #     print()
+    #     print("Cluster sizes: ", cluster_sizes)
+    #     print(f"Removing {neurons_remove} neurons")
+    #     print(f"Only keeping simplices containing at least {simplex_threshold} neurons")
 
-        dataset_params = DatasetParams(
-            network_type,
-            n_clusters,
-            cluster_sizes,
-            n_neurons,
-            n_neurons_remaining,
-            neurons_remove,
-            n_timesteps,
-            number_of_files,
-            weight_threshold,
-            simplex_threshold,
-            scaled_loss
-        )
+    #     dataset_params = DatasetParams(
+    #         network_type,
+    #         n_clusters,
+    #         cluster_sizes,
+    #         n_neurons,
+    #         n_neurons_remaining,
+    #         neurons_remove,
+    #         n_timesteps,
+    #         number_of_files,
+    #         weight_threshold,
+    #         simplex_threshold,
+    #         scaled_loss,
+    #         n_shifts
+    #     )
 
-        edge_regressor(dataset_params, mode)
+    #     edge_regressor(dataset_params, mode)

@@ -42,7 +42,7 @@ def plot_loss_remove(network, cluster_size: int, neurons_removed: int, simplex_f
         val_loss = df["val_loss"][0:epochs]
 
         if error: 
-            val_loss_std = df["val_loss_std"][0:epochs]
+            val_loss_std = df["val_loss_std"][0:epochs]/np.sqrt(30)
 
         fig.add_trace(go.Scatter(y=val_loss, name=f"{removed}", line=dict(width=3, color=my_colours[idx+6])))
 
@@ -86,5 +86,6 @@ def plot_loss_remove(network, cluster_size: int, neurons_removed: int, simplex_f
 
 neurons_removed = range(0, 10)
 
-#plot_loss_remove("random", 30, neurons_removed, 0, 15, True)
+
+plot_loss_remove("random", 30, neurons_removed, 0, 15, True)
 plot_loss_remove("small_world", 25, neurons_removed, 0, 15, True)

@@ -8,6 +8,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors, path
 
+
 def add_opacity(color, opacity):
     return f'rgba{color[3:-1]}, {opacity})'
 
@@ -37,39 +38,39 @@ def plot_loss(network, cluster_size: list, neurons_removed: int, simplex_filter:
 
         df = pd.read_csv(data_path)
 
-        train_loss = df["train_loss"][0:epochs]
-        train_loss_std = df["train_loss_std"][0:epochs]
+        # train_loss = df["train_loss"][0:epochs]
+        # train_loss_std = df["train_loss_std"][0:epochs]
 
         val_loss = df["val_loss"][0:epochs]
-        val_loss_std = df["val_loss_std"][0:epochs]
+        val_loss_std = df["val_loss_std"][0:epochs]/np.sqrt(30)
 
-        fig.add_trace(go.Scatter(y=train_loss, name=f"Train - {size}", line=dict(width=3, color=my_colours[idx], dash="dash")))
+        # fig.add_trace(go.Scatter(y=train_loss, name=f"Train - {size}", line=dict(width=3, color=my_colours[idx], dash="dash")))
 
-        if error:
-            fig.add_trace(
-                go.Scatter(
-                name = "Upper bound",
-                y = train_loss + train_loss_std,
-                mode = 'lines',
-                marker = dict(color=my_colours[idx]),
-                line = dict(width = 0),
-                showlegend=False
-            ))
+        # if error:
+        #     fig.add_trace(
+        #         go.Scatter(
+        #         name = "Upper bound",
+        #         y = train_loss + train_loss_std,
+        #         mode = 'lines',
+        #         marker = dict(color=my_colours[idx]),
+        #         line = dict(width = 0),
+        #         showlegend=False
+        #     ))
 
-            fig.add_trace(
-                go.Scatter(
-                    name = "Lower bound",
-                    y = train_loss - train_loss_std,
-                    marker = dict(color=my_colours[idx]),
-                    line = dict(width = 0),
-                    mode = 'lines',
-                    fillcolor = translucent_colours[idx], 
-                    fill = 'tonexty',
-                    showlegend=False
-                )
-            )
+        #     fig.add_trace(
+        #         go.Scatter(
+        #             name = "Lower bound",
+        #             y = train_loss - train_loss_std,
+        #             marker = dict(color=my_colours[idx]),
+        #             line = dict(width = 0),
+        #             mode = 'lines',
+        #             fillcolor = translucent_colours[idx], 
+        #             fill = 'tonexty',
+        #             showlegend=False
+        #         )
+        #     )
 
-        fig.add_trace(go.Scatter(y=val_loss, name=f"Val. - {size}", line=dict(width=3, color=my_colours[idx])))
+        fig.add_trace(go.Scatter(y=val_loss, name=f"{size}", line=dict(width=3, color=my_colours[idx])))
 
         if error: 
             fig.add_trace(
@@ -102,21 +103,21 @@ def plot_loss(network, cluster_size: list, neurons_removed: int, simplex_filter:
         network_name = "small-world"
 
     fig.update_layout(
-        title=f"Loss for {network_name} networks of different sizes",
-        legend_title='Loss - Neurons',
+        title=f"Validation loss for {network_name} networks of different sizes",
+        legend_title='Neurons',
         xaxis_title="Epochs",
         yaxis_title="Loss",
         font_family = "Garamond",
         font_size = 15)
 
-    fig.write_image(f"figures/{network}_train_val_loss_epochs_error_{error}.pdf")
+    fig.write_image(f"figures/{network}_val_loss_epochs_error_{error}.pdf")
 
 
-sm_size_list = [10, 20, 30, 40, 50, 60]
+sm_size_list = [10, 15, 20, 25, 30, 40, 50, 60, 70]
 rm_size_list = [10, 15, 20, 25, 30, 40, 50, 60, 70]
 
 
-#plot_loss("random", rm_size_list, 0, 0, 15, error=True)
+plot_loss("random", rm_size_list, 0, 0, 15, error=True)
 
 plot_loss("small_world", sm_size_list, 0, 0, 15, error=True)
 
@@ -140,7 +141,8 @@ def best_loss(network_type, cluster_size, neurons_removed: int, simplex_filter: 
         val_loss_std = df["val_loss_std"]
 
         best_loss[idx] = np.min(val_loss)
-        best_loss_std[idx] = val_loss[np.argmin(val_loss)]
+        best_loss_std[idx] = val_loss_std[np.argmin(val_loss)]/np.sqrt(30)
+
 
     fig = go.Figure([
         go.Scatter(
@@ -178,7 +180,7 @@ def best_loss(network_type, cluster_size, neurons_removed: int, simplex_filter: 
     elif network_type == "small_world":
         network_name = "small-world"
 
-    fig.update_layout(title=f'Best validation loss for {network_name} network of different sizes', 
+    fig.update_layout(title=f'Best validation loss for {network_name} networks of different sizes', 
                 xaxis_title='Neurons',
                 yaxis_title='Best validation loss',
                 font_family = "Garamond",
@@ -191,8 +193,8 @@ def best_loss(network_type, cluster_size, neurons_removed: int, simplex_filter: 
 sm_size_list = [10, 15, 20, 25, 30, 40, 50, 60, 70]
 rm_size_list = [10, 15, 20, 25, 30, 40, 50, 60, 70]
 
-# best_loss("random", rm_size_list, 0, 0)
-# best_loss("small_world", sm_size_list, 0, 0)
+best_loss("random", rm_size_list, 0, 0)
+best_loss("small_world", sm_size_list, 0, 0)
 
 
 

@@ -15,6 +15,7 @@ class DatasetParams:
     weight_threshold: float
     simplex_threshold: int
     scaled_loss: bool
+    n_shifts: int
 
 
     @property
@@ -27,6 +28,9 @@ class DatasetParams:
         if self.scaled_loss:
             return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_simplex_threshold_{self.simplex_threshold}_scaled_loss"
         
+        elif self.n_shifts > 10:
+            return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_simplex_threshold_{self.simplex_threshold}_n_shifts_{self.n_shifts}"
+
         else:
             return f"{self.network_type}/cluster_sizes_{self.cluster_sizes}_n_steps_{self.n_timesteps}_simplex_threshold_{self.simplex_threshold}"
 
